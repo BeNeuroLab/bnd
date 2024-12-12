@@ -32,14 +32,14 @@ def _check_root(root_path: Path):
 
 
 class Config:
-    def __init__(self, env_file='.env'):
-        self.load_env(env_file)
+    """
+    Class to load local configuration
+    """
+    def __init__(self, env_path=_get_env_path()):
+        self.load_env(env_path)
 
-    def load_env(self, env_file):
-        if not os.path.exists(env_file):
-            raise FileNotFoundError(f"{env_file} not found")
-
-        with open(env_file, 'r') as file:
+    def load_env(self, env_path: Path):
+        with open(env_path, 'r') as file:
             for line in file:
                 # Ignore comments and empty lines
                 line = line.strip()
@@ -50,10 +50,7 @@ class Config:
                 key, value = map(str.strip, line.split('=', 1))
 
                 # Set as environment variable
-                os.environ[key] = value
-
-    def get(self, key, default=None):
-        return os.getenv(key, default)
+                setattr(self, key, Path(value))
 
 
 def _load_config() -> Config:

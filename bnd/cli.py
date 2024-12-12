@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import typer
+from rich import print
 
 from bnd.config import _check_is_git_track, _check_root, _get_env_path, _get_package_path, \
     _load_config
@@ -52,7 +53,6 @@ def check_config():
     _check_root(config.REMOTE_PATH)
 
     print("[green]Config looks good.")
-
 
 
 @app.command()
