@@ -1,2 +1,24 @@
-# bnd
-Code for checking, moving, and processing the data recorded in the lab 
+# bnd : BeNeuroLab Data Organization
+
+A collection of functions for managing the experimental data recorded in the 
+BeNeuro Lab, and a CLI tool called `bnd` for easy access to this functionality.
+# Setting up
+## Installation
+If you just want to use bnd without the hassle of going through poetry we can do this 
+with conda
+1. Install `conda`
+   - You can use either [Miniconda](https://docs.anaconda.com/miniconda/install/#quick-command-line-install) or [Miniforge](https://github.com/conda-forge/miniforge)
+2. Clone repo
+   ```shell
+   git clone https://github.com/BeNeuroLab/beneuro_experimental_data_organization.git
+   cd ./beneuro_experimental_data_organization
+   ```
+3. Open either Miniconda prompt or Miniforge promt and run the following command. This 
+   may take some time: 
+   ```shell
+   conda env create --file=environment.yml
+   ```
+4. Create your configuration file:
+   ```shell
+   bnd init  # Provide the path to the repo, and to local and remote data storage
+   bnd --help # Start reading about the functions!
