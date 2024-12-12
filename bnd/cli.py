@@ -12,6 +12,8 @@ app = typer.Typer(
     add_completion=False,  # Disable the auto-completion options
 )
 
+# ================= Data Transfer =====================
+
 
 @app.command()
 def up():
@@ -37,6 +39,24 @@ def down():
     """
     return
 
+
+# ================= Updating =====================
+@app.command()
+def self_update():
+    pass
+
+# ================= Config =====================
+
+
+@app.command()
+def show_config():
+    """
+    Show the contents of the config file.
+    """
+    config = _load_config()
+    print(f"bnd source code is at {_get_package_path()}", end="\n\n")
+    for attr, value in config.__dict__.items():
+        print(f"{attr}: {value}")
 
 @app.command()
 def check_config():
