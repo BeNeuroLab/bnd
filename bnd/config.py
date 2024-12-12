@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 
@@ -35,19 +34,20 @@ class Config:
     """
     Class to load local configuration
     """
+
     def __init__(self, env_path=_get_env_path()):
         self.load_env(env_path)
 
     def load_env(self, env_path: Path):
-        with open(env_path, 'r') as file:
+        with open(env_path, "r") as file:
             for line in file:
                 # Ignore comments and empty lines
                 line = line.strip()
-                if not line or line.startswith('#'):
+                if not line or line.startswith("#"):
                     continue
 
                 # Parse key-value pairs
-                key, value = map(str.strip, line.split('=', 1))
+                key, value = map(str.strip, line.split("=", 1))
 
                 # Set as environment variable
                 setattr(self, key, Path(value))
@@ -61,4 +61,3 @@ def _load_config() -> Config:
         raise FileNotFoundError("Config file not found. Run `bnd init` to create one.")
 
     return Config()
-

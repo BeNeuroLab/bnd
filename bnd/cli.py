@@ -3,8 +3,13 @@ from pathlib import Path
 import typer
 from rich import print
 
-from bnd.config import _check_is_git_track, _check_root, _get_env_path, _get_package_path, \
-    _load_config
+from bnd.config import (
+    _check_is_git_track,
+    _check_root,
+    _get_env_path,
+    _get_package_path,
+    _load_config,
+)
 from bnd.update_bnd import check_for_updates, update_bnd
 
 # Create a Typer app
@@ -57,6 +62,7 @@ def down():
 
 
 # =================================== Updating ==========================================
+
 
 @app.command()
 def check_updates():
@@ -125,7 +131,9 @@ def init():
         _check_is_git_track(repo_path)
 
         local_path = Path(
-            typer.prompt("Enter the absolute path to the root of the local data storage")
+            typer.prompt(
+                "Enter the absolute path to the root of the local data storage"
+            )
         )
         _check_root(local_path)
 
