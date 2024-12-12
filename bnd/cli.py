@@ -5,14 +5,29 @@ from rich import print
 
 from bnd.config import _check_is_git_track, _check_root, _get_env_path, _get_package_path, \
     _load_config
+from bnd.update_bnd import check_for_updates, update_bnd
 
 # Create a Typer app
 app = typer.Typer(
-    help="Simple CLI Tool using Typer",
     add_completion=False,  # Disable the auto-completion options
 )
 
-# ================= Data Transfer =====================
+# ============================== Pipeline functions =======================================
+
+
+def to_pyal():
+    return
+
+
+def to_nwb():
+    return
+
+
+def ksort():
+    return
+
+
+# ================================== Data Transfer ========================================
 
 
 @app.command()
@@ -33,6 +48,7 @@ def up():
 def down():
     """
     Download experimental data from the remote server of a single session.
+
     \b
     Example usage to download data of a given session:
         `bnd dl M017_2024_03_12_18_45 -e`  # Uploads ephys
@@ -40,12 +56,25 @@ def down():
     return
 
 
-# ================= Updating =====================
+# =================================== Updating ==========================================
+
+@app.command()
+def check_updates():
+    """
+    Check if there are any new commits on the repo's main branch.
+    """
+    check_for_updates()
+
+
 @app.command()
 def self_update():
-    pass
+    """
+    Update the bnd tool by pulling the latest commits from the repo's main branch.
+    """
+    update_bnd()
 
-# ================= Config =====================
+
+# =================================== Config ============================================
 
 
 @app.command()
@@ -57,6 +86,7 @@ def show_config():
     print(f"bnd source code is at {_get_package_path()}", end="\n\n")
     for attr, value in config.__dict__.items():
         print(f"{attr}: {value}")
+
 
 @app.command()
 def check_config():
