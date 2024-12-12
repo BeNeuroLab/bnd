@@ -1,8 +1,12 @@
 import platform
 import subprocess
+import warnings
 from pathlib import Path
 
+from bnd import set_logging
 from bnd.config import _load_config
+
+logger = set_logging()
 
 
 def _run_git_command(repo_path: Path, command: list[str]) -> str:
@@ -116,7 +120,7 @@ def _remote_file_changed(file_path: Path, remote_branch) -> bool:
             print(f"No remote changes detected in {file_path.name}.")
             return False
     else:
-        print(f"Could not retrieve hash for {file_path.name}.")
+        warnings.warn(f"Could not retrieve hash for {file_path.name}.")
         return False
 
 

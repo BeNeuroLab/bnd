@@ -3,6 +3,7 @@ from pathlib import Path
 import typer
 from rich import print
 
+from bnd import set_logging
 from bnd.config import (
     _check_is_git_track,
     _check_root,
@@ -16,19 +17,45 @@ from bnd.update_bnd import check_for_updates, update_bnd
 app = typer.Typer(
     add_completion=False,  # Disable the auto-completion options
 )
+logger = set_logging()
+
 
 # ============================== Pipeline functions =======================================
 
 
+@app.command()
 def to_pyal():
+    """
+    Convert session data into a pyaldata dataframe and saves it as a .mat
+
+    \b
+    Basic usage:
+        `bnd to-pyal M037_2024_01_01_10_00`
+    """
     return
 
 
+@app.command()
 def to_nwb():
+    """
+    Convert session data into a nwb file and saves it as a .nwb
+
+    \b
+    Basic usage:
+        `bnd to-nwb M037_2024_01_01_10_00`
+    """
     return
 
 
+@app.command()
 def ksort():
+    """
+    Kilosorts data from a single session.
+
+    \b
+    Basic usage:
+        `bnd ksort M037_2024_01_01_10_00`
+    """
     return
 
 
