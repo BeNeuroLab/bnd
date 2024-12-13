@@ -3,7 +3,6 @@ from pathlib import Path
 import typer
 from rich import print
 
-from bnd import set_logging
 from bnd.config import (
     _check_is_git_track,
     _check_root,
@@ -17,7 +16,6 @@ from bnd.update_bnd import check_for_updates, update_bnd
 app = typer.Typer(
     add_completion=False,  # Disable the auto-completion options
 )
-logger = set_logging()
 
 
 # ============================== Pipeline functions =======================================
