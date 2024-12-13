@@ -2,14 +2,17 @@ from pathlib import Path
 
 import typer
 from rich import print
+from typing_extensions import Annotated
 
 from bnd.config import (
     _check_is_git_track,
     _check_root,
+    _check_session_directory,
     _get_env_path,
     _get_package_path,
     _load_config,
 )
+from bnd.pipeline.pyaldata import run_pyaldata_conversion
 from bnd.update_bnd import check_for_updates, update_bnd
 
 # Create a Typer app
@@ -22,14 +25,34 @@ app = typer.Typer(
 
 
 @app.command()
-def to_pyal():
+def to_pyal(
+    session_name: str,
+    kilosort: Annotated[
+        bool,
+        typer.Option(
+            "--kilosort/--dont-kilosort",
+            "-k/-K",
+            help="Upload ephys data (-k) or not (-K).",
+        ),
+    ] = False,
+) -> None:
     """
     Convert session data into a pyaldata dataframe and saves it as a .mat
 
     \b
     Basic usage:
-        `bnd to-pyal M037_2024_01_01_10_00`
+        `bnd to-pyal M037_2024_01_01_10_00 -k` Kilosorts data and converts to pyaldata
     """
+    # Load config and get session path
+    config = _load_config()
+    session_path = config.get_local_session_path(session_name)
+
+    # Check session directory
+    _check_session_directory(session_path)
+
+    # Run pipeline
+    run_pyaldata_conversion(session_path, kilosort)
+
     return
 
 
@@ -42,6 +65,9 @@ def to_nwb():
     Basic usage:
         `bnd to-nwb M037_2024_01_01_10_00`
     """
+    # _check_session_directory(session_path)
+    # run_nwb_conversion()
+
     return
 
 
@@ -54,6 +80,8 @@ def ksort():
     Basic usage:
         `bnd ksort M037_2024_01_01_10_00`
     """
+    # _check_session_directory(session_path)
+    # run_kilosort()
     return
 
 

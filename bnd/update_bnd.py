@@ -6,7 +6,7 @@ from pathlib import Path
 from bnd import set_logging
 from bnd.config import _load_config
 
-logger = set_logging()
+logger = set_logging(__name__)
 
 
 def _run_git_command(repo_path: Path, command: list[str]) -> str:

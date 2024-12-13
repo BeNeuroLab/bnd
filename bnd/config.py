@@ -16,6 +16,10 @@ def _get_env_path() -> Path:
     return package_path / ".env"
 
 
+def _check_session_directory(session_path):
+    return
+
+
 def _check_is_git_track(repo_path):
     folder = Path(repo_path)  # Convert to Path object
     assert (folder / ".git").is_dir()
@@ -51,6 +55,15 @@ class Config:
 
                 # Set as environment variable
                 setattr(self, key, Path(value))
+
+    @staticmethod
+    def get_animal_name(session_name) -> str:
+        return session_name[:4]
+
+    def get_local_session_path(self, session_name: str, processed_or_raw: str):
+        animal = self.get_animal_name(session_name)
+        local_session_path = self.LOCAL_PATH / "raw" / animal / session_name
+        return local_session_path
 
 
 def _load_config() -> Config:
