@@ -12,6 +12,8 @@ from bnd.config import (
     _get_package_path,
     _load_config,
 )
+from bnd.pipeline.kilosort import run_kilosort
+from bnd.pipeline.nwb import run_nwb_conversion
 from bnd.pipeline.pyaldata import run_pyaldata_conversion
 from bnd.update_bnd import check_for_updates, update_bnd
 
@@ -32,12 +34,18 @@ def to_pyal(
         typer.Option(
             "--kilosort/--dont-kilosort",
             "-k/-K",
-            help="Upload ephys data (-k) or not (-K).",
+            help="Run kilosort if not available (-k) or dont (-K).",
         ),
     ] = False,
 ) -> None:
     """
     Convert session data into a pyaldata dataframe and saves it as a .mat
+
+    \b
+    If no .nwb file is present it will automatically generate one and if an nwb file is present it will skip it. If you want to generate a new one run `bnd to-nwb`
+
+    \b
+    If no kilosorted data is available it will not kilosort by default. If you want to kilosort add the flag `-k`
 
     \b
     Basic usage:
@@ -57,22 +65,43 @@ def to_pyal(
 
 
 @app.command()
-def to_nwb():
+def to_nwb(
+    session_name: str,
+    kilosort: Annotated[
+        bool,
+        typer.Option(
+            "--kilosort/--dont-kilosort",
+            "-k/-K",
+            help="Run kilosort if not available (-k) or dont (-K).",
+        ),
+    ] = False,
+) -> None:
     """
     Convert session data into a nwb file and saves it as a .nwb
+
+    \b
+    If no kilosorted data is available it will not kilosort by default. If you want to kilosort add the flag `-k`
 
     \b
     Basic usage:
         `bnd to-nwb M037_2024_01_01_10_00`
     """
-    # _check_session_directory(session_path)
-    # run_nwb_conversion()
+    config = _load_config()
+    session_path = config.get_local_session_path(session_name)
+
+    # Check session directory
+    _check_session_directory(session_path)
+
+    # Run pipeline
+    run_nwb_conversion(session_path, kilosort)
 
     return
 
 
 @app.command()
-def ksort():
+def ksort(
+    session_name: str,
+) -> None:
     """
     Kilosorts data from a single session.
 
@@ -80,8 +109,14 @@ def ksort():
     Basic usage:
         `bnd ksort M037_2024_01_01_10_00`
     """
-    # _check_session_directory(session_path)
-    # run_kilosort()
+    config = _load_config()
+    session_path = config.get_local_session_path(session_name)
+
+    # Check session directory
+    _check_session_directory(session_path)
+
+    # Run pipeline
+    run_kilosort(session_path)
     return
 
 
