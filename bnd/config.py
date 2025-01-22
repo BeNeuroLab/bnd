@@ -60,10 +60,16 @@ class Config:
     def get_animal_name(session_name) -> str:
         return session_name[:4]
 
-    def get_local_session_path(self, session_name: str, processed_or_raw: str):
+    def get_local_session_path(self, session_name: str):
         animal = self.get_animal_name(session_name)
         local_session_path = self.LOCAL_PATH / "raw" / animal / session_name
         return local_session_path
+
+    @staticmethod
+    def get_subdirectories_from_pattern(directory: Path, subdir_pattern: str):
+        subdirectory_paths = list(directory.glob(subdir_pattern))
+
+        return subdirectory_paths
 
 
 def _load_config() -> Config:

@@ -12,7 +12,8 @@ from bnd.config import (
     _get_package_path,
     _load_config,
 )
-from bnd.pipeline.kilosort import run_kilosort
+from bnd.data_transfer import download_session, upload_session
+from bnd.pipeline.kilosort import run_kilosort_on_session
 from bnd.pipeline.nwb import run_nwb_conversion
 from bnd.pipeline.pyaldata import run_pyaldata_conversion
 from bnd.update_bnd import check_for_updates, update_bnd
@@ -116,7 +117,7 @@ def ksort(
     _check_session_directory(session_path)
 
     # Run pipeline
-    run_kilosort(session_path)
+    run_kilosort_on_session(session_path)
     return
 
 
@@ -134,6 +135,7 @@ def up():
     Example usage to upload data of last session of a given animal:
         `bnd up M017 -e`  # Uploads ephys
     """
+    upload_session()
     return
 
 
@@ -146,6 +148,7 @@ def down():
     Example usage to download data of a given session:
         `bnd dl M017_2024_03_12_18_45 -e`  # Uploads ephys
     """
+    download_session()
     return
 
 
