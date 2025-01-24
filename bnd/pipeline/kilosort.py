@@ -63,7 +63,7 @@ def run_kilosort_on_stream(probe_folder_path, recording_path, session_path, prob
         probe_name=probe_name,
         data_dir=probe_folder_path,
         results_dir=ksort_output_path,
-        save_preprocessed_copy=True,
+        save_preprocessed_copy=False,
         verbose_console=False
     )
     return
