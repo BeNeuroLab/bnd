@@ -1,5 +1,6 @@
 name: bnd-test
 channels:
+  - conda-forge
   - pytorch
   - nvidia
   - defaults
@@ -13,7 +14,7 @@ dependencies:
   - numpy
   - pandas
   - scipy
-  - ndx_pose
   - pip:
       - kilosort
+      - ndx_pose
       - -e ./
