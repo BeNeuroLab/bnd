@@ -100,7 +100,7 @@ def to_nwb(
 
 @app.command()
 def ksort(
-    session_name: str,
+    session_name: str = typer.Argument(..., help="Session name to kilosort"),
 ) -> None:
     """
     Kilosorts data from a single session.
