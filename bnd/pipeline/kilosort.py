@@ -18,7 +18,12 @@ except ImportError as e:
     ) from e
 
 
-def run_kilosort_on_stream(probe_folder_path, recording_path, session_path, probe_name: str = 'neuropixPhase3B1_kilosortChanMap.mat') -> None:
+def run_kilosort_on_stream(
+    probe_folder_path: Path,
+    recording_path: Path,
+    session_path: Path,
+    probe_name: str = "neuropixPhase3B1_kilosortChanMap.mat",
+) -> None:
     """
     Runs kilosort4 on a raw SpikeGLX data and saves to output folder within the directory
 
@@ -30,6 +35,8 @@ def run_kilosort_on_stream(probe_folder_path, recording_path, session_path, prob
         Path to recording directory with probe folders (i.e., _g0 or _g1)
     session_path : Path
         Path to the session directory
+    probe_name : str
+        Type of neuropixels probe
 
     Returns
     -------
@@ -50,13 +57,12 @@ def run_kilosort_on_stream(probe_folder_path, recording_path, session_path, prob
     ksort_output_path.mkdir(parents=True, exist_ok=True)
 
     if not PROBE_DIR.exists():
-        logger.info(f"Probe directory not found, downloading probes")
+        logger.info("Probe directory not found, downloading probes")
         download_probes()
 
     if any(PROBE_DIR.glob(f"{probe_name}")):
-        # Sometimes the gateway can throw an error so just double check. 
+        # Sometimes the gateway can throw an error so just double check.
         download_probes()
-    
 
     _ = run_kilosort(
         settings=sorter_params,
@@ -64,7 +70,7 @@ def run_kilosort_on_stream(probe_folder_path, recording_path, session_path, prob
         data_dir=probe_folder_path,
         results_dir=ksort_output_path,
         save_preprocessed_copy=False,
-        verbose_console=False
+        verbose_console=False,
     )
     return
 
@@ -120,13 +126,15 @@ def run_kilosort_on_session(session_path: Path) -> None:
     # Check kilosort is installed in environment
     try:
         import torch
-    
+
         if torch.cuda.is_available():
             logger.info(
                 f"CUDA is available. GPU device: {torch.cuda.get_device_name(0)}"
             )
         else:
-            logger.warning("CUDA is not available. GPU computations will not be enabled.")
+            logger.warning(
+                "CUDA is not available. GPU computations will not be enabled."
+            )
             return
     except ImportError as e:
         # Log the error and raise it
@@ -146,7 +154,9 @@ def run_kilosort_on_session(session_path: Path) -> None:
     )
 
     if not ephys_recording_folders:
-        logger.warning(f"No ephys folders found. Consider running `bnd dl {session_path.name} -e")
+        logger.warning(
+            f"No ephys folders found. Consider running `bnd dl {session_path.name} -e"
+        )
 
     else:
         for recording_path in ephys_recording_folders:

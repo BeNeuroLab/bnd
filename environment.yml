@@ -1,4 +1,4 @@
-name: kilosort-test
+name: bnd-test
 channels:
   - pytorch
   - nvidia
@@ -9,6 +9,11 @@ dependencies:
   - typer
   - pytorch
   - pytorch-cuda=11.8
+  - pynwb
+  - numpy
+  - pandas
+  - scipy
+  - ndx_pose
   - pip:
       - kilosort
       - -e ./

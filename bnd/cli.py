@@ -67,7 +67,7 @@ def to_pyal(
 @app.command()
 def to_nwb(
     session_name: str,
-    kilosort: Annotated[
+    kilosort_flag: Annotated[
         bool,
         typer.Option(
             "--kilosort/--dont-kilosort",
@@ -93,7 +93,7 @@ def to_nwb(
     _check_session_directory(session_path)
 
     # Run pipeline
-    run_nwb_conversion(session_path, kilosort)
+    run_nwb_conversion(session_path, kilosort_flag)
 
     return
 
