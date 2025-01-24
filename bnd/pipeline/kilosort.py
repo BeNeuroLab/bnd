@@ -6,15 +6,15 @@ from bnd.config import Config, _load_config
 logger = set_logging(__name__)
 
 
-# try:
-#     from kilosort import run_kilosort
-# except ImportError as e:
-#     # Log the error and raise it
-#     logger.error("Failed to import the required package: %s", e)
-#     raise ImportError(
-#         "Could not import spike sorting functionality. Make sure kilosort is installed"
-#         " in the environment"
-#     ) from e
+try:
+    from kilosort import run_kilosort
+except ImportError as e:
+    # Log the error and raise it
+    logger.error("Failed to import the required package: %s", e)
+    raise ImportError(
+        "Could not import spike sorting functionality. Make sure kilosort is installed"
+        " in the environment"
+    ) from e
 
 
 def run_kilosort_on_stream(probe_folder_path, recording_path, session_path) -> None:
@@ -48,13 +48,13 @@ def run_kilosort_on_stream(probe_folder_path, recording_path, session_path) -> N
     )
     ksort_output_path.mkdir(parents=True, exist_ok=True)
 
-    # _ = run_kilosort(
-    #     settings=sorter_params,
-    #     probe_name='neuropixPhase3B1_kilosortChanMap.mat',
-    #     data_dir=probe_folder_path,
-    #     results_dir=ksort_output_path,
-    #     save_preprocessed_copy=True,
-    # )
+    _ = run_kilosort(
+        settings=sorter_params,
+        probe_name='neuropixPhase3B1_kilosortChanMap.mat',
+        data_dir=probe_folder_path,
+        results_dir=ksort_output_path,
+        save_preprocessed_copy=True,
+    )
     return
 
 
@@ -107,22 +107,22 @@ def run_kilosort_on_session(session_path: Path) -> None:
 
     """
     # Check kilosort is installed in environment
-    # try:
-    #     import torch
-    #
-    #     if torch.cuda.is_available():
-    #         logger.info(
-    #             f"CUDA is available. GPU device: {torch.cuda.get_device_name(0)}"
-    #         )
-    #     else:
-    #         logger.warning("CUDA is not available. GPU computations will not be enabled.")
-    # except ImportError as e:
-    #     # Log the error and raise it
-    #     logger.error("Failed to import the required package: %s", e)
-    #     raise ImportError(
-    #         "Could not import spike sorting functionality. Make sure torch is installed"
-    #         " in the environment"
-    #     ) from e
+    try:
+        import torch
+    
+        if torch.cuda.is_available():
+            logger.info(
+                f"CUDA is available. GPU device: {torch.cuda.get_device_name(0)}"
+            )
+        else:
+            logger.warning("CUDA is not available. GPU computations will not be enabled.")
+    except ImportError as e:
+        # Log the error and raise it
+        logger.error("Failed to import the required package: %s", e)
+        raise ImportError(
+            "Could not import spike sorting functionality. Make sure torch is installed"
+            " in the environment"
+        ) from e
 
     config = _load_config()
 
@@ -130,14 +130,19 @@ def run_kilosort_on_session(session_path: Path) -> None:
         session_path = Path(session_path)
 
     ephys_recording_folders = config.get_subdirectories_from_pattern(
-        session_path, "*g?"
+        session_path, "*_g?"
     )
-    for recording_path in ephys_recording_folders:
-        logger.info(f"Processing recording: {recording_path.name}")
-        run_kilosort_on_recording(
-            config,
-            recording_path,
-            session_path,
-        )
+
+    if not ephys_recording_folders:
+        logger.warning(f"No ephys folders found. Consider running `bnd dl {session_path.name} -e")
+
+    else:
+        for recording_path in ephys_recording_folders:
+            logger.info(f"Processing recording: {recording_path.name}")
+            run_kilosort_on_recording(
+                config,
+                recording_path,
+                session_path,
+            )
 
     return
