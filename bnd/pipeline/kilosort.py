@@ -8,6 +8,7 @@ logger = set_logging(__name__)
 
 try:
     from kilosort import run_kilosort
+    from kilosort.utils import PROBE_DIR, download_probes
 except ImportError as e:
     # Log the error and raise it
     logger.error("Failed to import the required package: %s", e)
@@ -17,7 +18,7 @@ except ImportError as e:
     ) from e
 
 
-def run_kilosort_on_stream(probe_folder_path, recording_path, session_path) -> None:
+def run_kilosort_on_stream(probe_folder_path, recording_path, session_path, probe_name: str = 'neuropixPhase3B1_kilosortChanMap.mat') -> None:
     """
     Runs kilosort4 on a raw SpikeGLX data and saves to output folder within the directory
 
@@ -35,7 +36,7 @@ def run_kilosort_on_stream(probe_folder_path, recording_path, session_path) -> N
 
     """
 
-    # TODO: Improve this
+    # TODO: Implement automatic detection of probe type
     sorter_params = {
         "n_chan_bin": 385,
     }
@@ -48,12 +49,22 @@ def run_kilosort_on_stream(probe_folder_path, recording_path, session_path) -> N
     )
     ksort_output_path.mkdir(parents=True, exist_ok=True)
 
+    if not PROBE_DIR.exists():
+        logger.info(f"Probe directory not found, downloading probes")
+        download_probes()
+
+    if any(PROBE_DIR.glob(f"{probe_name}")):
+        # Sometimes the gateway can throw an error so just double check. 
+        download_probes()
+    
+
     _ = run_kilosort(
         settings=sorter_params,
-        probe_name='neuropixPhase3B1_kilosortChanMap.mat',
+        probe_name=probe_name,
         data_dir=probe_folder_path,
         results_dir=ksort_output_path,
         save_preprocessed_copy=True,
+        verbose_console=False
     )
     return
 
@@ -116,6 +127,7 @@ def run_kilosort_on_session(session_path: Path) -> None:
             )
         else:
             logger.warning("CUDA is not available. GPU computations will not be enabled.")
+            return
     except ImportError as e:
         # Log the error and raise it
         logger.error("Failed to import the required package: %s", e)
