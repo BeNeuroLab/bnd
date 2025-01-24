@@ -1,7 +1,14 @@
-name: bnd
+name: kilosort-test
+channels:
+  - pytorch
+  - nvidia
+  - defaults
 dependencies:
   - pip
-  - python
+  - python=3.10
   - typer
+  - pytorch
+  - pytorch-cuda=11.8
   - pip:
+      - kilosort
       - -e ./

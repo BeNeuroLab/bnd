@@ -13,7 +13,6 @@ from bnd.config import (
     _load_config,
 )
 from bnd.data_transfer import download_session, upload_session
-from bnd.pipeline.kilosort import run_kilosort_on_session
 from bnd.pipeline.nwb import run_nwb_conversion
 from bnd.pipeline.pyaldata import run_pyaldata_conversion
 from bnd.update_bnd import check_for_updates, update_bnd
@@ -110,6 +109,9 @@ def ksort(
     Basic usage:
         `bnd ksort M037_2024_01_01_10_00`
     """
+    # this will throw an error if the dependencies are not available
+    from bnd.pipeline.kilosort import run_kilosort_on_session
+
     config = _load_config()
     session_path = config.get_local_session_path(session_name)
 

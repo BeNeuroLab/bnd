@@ -24,9 +24,9 @@ def run_kilosort_on_stream(probe_folder_path, recording_path, session_path) -> N
     Parameters
     ----------
     probe_folder_path : Path
-        Path to probe folder with raw SpikeGLX data
+        Path to probe folder with raw SpikeGLX data (i.e., _imec0 or _imec1)
     recording_path : Path
-        Path to recording directory with probe folders
+        Path to recording directory with probe folders (i.e., _g0 or _g1)
     session_path : Path
         Path to the session directory
 
@@ -69,7 +69,7 @@ def run_kilosort_on_recording(
     config : Config
         Configuration class
     recording_path : Path
-        Path to recording directory with probe folders
+        Path to recording directory with probe folders (i.e., _g0 or _g1)
     session_path : Path
         Path to the session directory
 
