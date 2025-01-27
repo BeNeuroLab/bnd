@@ -1,0 +1,8 @@
+name: bnd
+dependencies:
+  - pip
+  - python
+  - typer
+  - pip:
+      - kilosort
+      - -e ./
