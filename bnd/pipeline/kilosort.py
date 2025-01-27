@@ -24,13 +24,15 @@ def _read_probe_type(meta_file_path: str) -> str:
             if "imDatPrb_type" in line:
                 _, value = line.strip().split("=")
                 break
-        
+
         if int(value) == 0:
             probe_type = "neuropixPhase3B1_kilosortChanMap.mat"
         elif int(value) == 21:
             probe_type = "NP2_kilosortChanMap.mat"
         else:
-            raise ValueError("Probe type not recogised. It appears to be different from Npx 1.0 or 2.0")
+            raise ValueError(
+                "Probe type not recogised. It appears to be different from Npx 1.0 or 2.0"
+            )
     return probe_type
 
 
@@ -82,7 +84,9 @@ def run_kilosort_on_stream(
         download_probes()
 
     # Find out which probe type we have
-    meta_file_path = config.get_subdirectories_from_pattern(probe_folder_path, "*ap.meta")
+    meta_file_path = config.get_subdirectories_from_pattern(
+        probe_folder_path, "*ap.meta"
+    )
     probe_name = _read_probe_type(str(meta_file_path[0]))
 
     _ = run_kilosort(
