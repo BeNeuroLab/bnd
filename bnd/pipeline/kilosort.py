@@ -1,21 +1,13 @@
 from pathlib import Path
 
+import torch
+from kilosort import run_kilosort
+from kilosort.utils import PROBE_DIR, download_probes
+
 from bnd import set_logging
 from bnd.config import Config, _load_config
 
 logger = set_logging(__name__)
-
-
-try:
-    from kilosort import run_kilosort
-    from kilosort.utils import PROBE_DIR, download_probes
-except ImportError as e:
-    # Log the error and raise it
-    logger.error("Failed to import the required package: %s", e)
-    raise ImportError(
-        "Could not import spike sorting functionality. Make sure kilosort is installed"
-        " in the environment"
-    ) from e
 
 
 def _read_probe_type(meta_file_path: str) -> str:
@@ -62,7 +54,6 @@ def run_kilosort_on_stream(
 
     """
 
-    # TODO: Implement automatic detection of probe type
     sorter_params = {
         "n_chan_bin": 385,
     }
@@ -84,9 +75,7 @@ def run_kilosort_on_stream(
         download_probes()
 
     # Find out which probe type we have
-    meta_file_path = config.get_subdirectories_from_pattern(
-        probe_folder_path, "*ap.meta"
-    )
+    meta_file_path = config.get_subdirectories_from_pattern(probe_folder_path, "*ap.meta")
     probe_name = _read_probe_type(str(meta_file_path[0]))
 
     _ = run_kilosort(
@@ -149,34 +138,18 @@ def run_kilosort_on_session(session_path: Path) -> None:
 
     """
     # Check kilosort is installed in environment
-    try:
-        import torch
-
-        if torch.cuda.is_available():
-            logger.info(
-                f"CUDA is available. GPU device: {torch.cuda.get_device_name(0)}"
-            )
-        else:
-            logger.warning(
-                "CUDA is not available. GPU computations will not be enabled."
-            )
-            return
-    except ImportError as e:
-        # Log the error and raise it
-        logger.error("Failed to import the required package: %s", e)
-        raise ImportError(
-            "Could not import spike sorting functionality. Make sure torch is installed"
-            " in the environment"
-        ) from e
+    if torch.cuda.is_available():
+        logger.info(f"CUDA is available. GPU device: {torch.cuda.get_device_name(0)}")
+    else:
+        logger.warning("CUDA is not available. GPU computations will not be enabled.")
+        return
 
     config = _load_config()
 
     if isinstance(session_path, str):
         session_path = Path(session_path)
 
-    ephys_recording_folders = config.get_subdirectories_from_pattern(
-        session_path, "*_g?"
-    )
+    ephys_recording_folders = config.get_subdirectories_from_pattern(session_path, "*_g?")
 
     if not ephys_recording_folders:
         logger.warning(

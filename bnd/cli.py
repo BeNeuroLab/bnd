@@ -13,8 +13,7 @@ from bnd.config import (
     _load_config,
 )
 from bnd.data_transfer import download_session, upload_session
-from bnd.pipeline.nwb import run_nwb_conversion
-from bnd.pipeline.pyaldata import run_pyaldata_conversion
+from bnd.pipeline import _check_processing_dependencies
 from bnd.update_bnd import check_for_updates, update_bnd
 
 # Create a Typer app
@@ -39,7 +38,16 @@ def to_pyal(
             "-k/-K",
             help="Run kilosort if available (-k) or dont (-K).",
         ),
-    ] = False,
+    ] = True,
+    mapping: Annotated[
+        str,
+        typer.Option(
+            "-m",
+            "--mapping",
+            help="Specify the channel mapping method: 'default' or 'custom.",
+            case_sensitive=False,
+        ),
+    ] = None,
 ) -> None:
     """
     Convert session data into a pyaldata dataframe and saves it as a .mat
@@ -52,9 +60,12 @@ def to_pyal(
 
     \b
     Basic usage:
-        `bnd to-pyal M037_2024_01_01_10_00 -k` Kilosorts data and converts to pyaldata
+        `bnd to-pyal M037_2024_01_01_10_00  # Kilosorts data and converts to pyaldata
+        `bnd to-pyal M037_2024_01_01_10_00 -m default  # Uses pinpoint mapping output
+        `bnd to-pyal M037_2024_01_01_10_00 -m default   # Uses pinpoint mapping output
     """
-    # TODO: Add channel map argument: no-map, default-map, custom-map
+    _check_processing_dependencies()
+    from bnd.pipeline.pyaldata import run_pyaldata_conversion
 
     # Load config and get session path
     config = _load_config()
@@ -64,7 +75,7 @@ def to_pyal(
     _check_session_directory(session_path)
 
     # Run pipeline
-    run_pyaldata_conversion(session_path, kilosort)
+    run_pyaldata_conversion(session_path, kilosort, map)
 
     return
 
@@ -80,6 +91,15 @@ def to_nwb(
             help="Run kilosort if not available (-k) or dont (-K).",
         ),
     ] = False,
+    mapping: Annotated[
+        str,
+        typer.Option(
+            "-m",
+            "--map",
+            help="Specify the channel mapping method: 'default' or 'custom.",
+            case_sensitive=False,
+        ),
+    ] = None,
 ) -> None:
     """
     Convert session data into a nwb file and saves it as a .nwb
@@ -91,6 +111,10 @@ def to_nwb(
     Basic usage:
         `bnd to-nwb M037_2024_01_01_10_00`
     """
+    # TODO: Add channel map argument: no-map, default-map, custom-map
+    _check_processing_dependencies()
+    from bnd.pipeline.nwb import run_nwb_conversion
+
     config = _load_config()
     session_path = config.get_local_session_path(session_name)
 
@@ -98,8 +122,7 @@ def to_nwb(
     _check_session_directory(session_path)
 
     # Run pipeline
-    run_nwb_conversion(session_path, kilosort_flag)
-
+    run_nwb_conversion(session_path, kilosort_flag, mapping)
     return
 
 
@@ -118,6 +141,7 @@ def ksort(
         `bnd ksort M037_2024_01_01_10_00`
     """
     # this will throw an error if the dependencies are not available
+    _check_processing_dependencies()
     from bnd.pipeline.kilosort import run_kilosort_on_session
 
     config = _load_config()
@@ -232,9 +256,7 @@ def init():
         _check_is_git_track(repo_path)
 
         local_path = Path(
-            typer.prompt(
-                "Enter the absolute path to the root of the local data storage"
-            )
+            typer.prompt("Enter the absolute path to the root of the local data storage")
         )
         _check_root(local_path)
 

@@ -97,7 +97,6 @@ def _parse_pynwb_probe(
     -------
 
     """
-
     # This returns a neurons x bin array of 0s and 1s
     binned_spikes = _bin_spikes(probe_units, bin_size)
 
@@ -121,18 +120,14 @@ def _parse_pynwb_probe(
     ]
     probe_channel_map = probe_electrode_locations_df["location"].to_dict()
 
-    no_pinpoint_channel_map = all(
-        value == "nan" for value in probe_channel_map.values()
-    )
+    no_pinpoint_channel_map = all(value == "nan" for value in probe_channel_map.values())
 
     brain_area_spikes_and_chan_best = {}
     if no_pinpoint_channel_map:
         brain_areas = {"all"}
     else:
         brain_areas = {
-            value
-            for value in probe_channel_map.values()
-            if value not in ["out", "void"]
+            value for value in probe_channel_map.values() if value not in ["out", "void"]
         }
 
     for brain_area in brain_areas:
@@ -159,12 +154,12 @@ def _parse_pynwb_probe(
         brain_area_spikes_and_chan_best[brain_area.replace("-", "_")] = {
             "spikes": binned_spikes[brain_area_neurons, :][sorted_chan_best_indices, :]
         }
-        brain_area_spikes_and_chan_best[brain_area.replace("-", "_")]["chan_best"] = (
-            sorted_chan_best
-        )
-        brain_area_spikes_and_chan_best[brain_area.replace("-", "_")]["unit_guide"] = (
-            unit_guide
-        )
+        brain_area_spikes_and_chan_best[brain_area.replace("-", "_")][
+            "chan_best"
+        ] = sorted_chan_best
+        brain_area_spikes_and_chan_best[brain_area.replace("-", "_")][
+            "unit_guide"
+        ] = unit_guide
         brain_area_spikes_and_chan_best[brain_area.replace("-", "_")]["KSLabel"] = (
             probe_units.KSLabel[brain_area_neurons][sorted_chan_best_indices]
         )
@@ -286,23 +281,19 @@ def _add_data_to_trial(
         ].to_numpy()
 
         if timestamp_column is not None:
-            df_to_add_to[timestamp_column] = df_to_add_to[timestamp_column].astype(
-                "object"
-            )
+            df_to_add_to[timestamp_column] = df_to_add_to[timestamp_column].astype("object")
             df_to_add_to.at[index, timestamp_column] = (
-                trial_specific_events["timestamp_idx"].to_numpy()
-                - row["idx_trial_start"]
+                trial_specific_events["timestamp_idx"].to_numpy() - row["idx_trial_start"]
             )
 
     return df_to_add_to
 
 
 class ParsedNWBFile:
-    def __init__(self, nwbfile_path, verbose):
+    def __init__(self, nwbfile_path: Path):
         with NWBHDF5IO(nwbfile_path, mode="r") as io:
             # General
             self.bin_size = 0.01
-            self.verbose = verbose
 
             # Nwb file
             self.nwbfile_path = nwbfile_path
@@ -448,9 +439,7 @@ class ParsedNWBFile:
             )
 
         # Concatenate both dataframes
-        df_events = pd.concat(
-            [df_behav_events, df_print_events], axis=0, ignore_index=True
-        )
+        df_events = pd.concat([df_behav_events, df_print_events], axis=0, ignore_index=True)
         df_events.sort_values(by="timestamp", ascending=True, inplace=True)
         df_events.reset_index(drop=True, inplace=True)
         self.pycontrol_events = df_events
@@ -472,9 +461,7 @@ class ParsedNWBFile:
         ball_position_spatial_series = self.behavior["Position"].spatial_series[
             "Ball position"
         ]
-        self.pycontrol_motion_sensors = _parse_spatial_series(
-            ball_position_spatial_series
-        )
+        self.pycontrol_motion_sensors = _parse_spatial_series(ball_position_spatial_series)
         return
 
     def try_parsing_anipose_output(self):
@@ -582,9 +569,7 @@ class ParsedNWBFile:
         if hasattr(self, "pycontrol_motion_sensors"):
             # Bin timestamps
             self.pycontrol_motion_sensors["timestamp_idx"] = np.floor(
-                self.pycontrol_motion_sensors.timestamps.values[:]
-                / 1000
-                / self.bin_size
+                self.pycontrol_motion_sensors.timestamps.values[:] / 1000 / self.bin_size
             ).astype(int)
 
             # Add columns
@@ -647,9 +632,7 @@ class ParsedNWBFile:
                     ] * len(self.pyaldata_df)
 
                     self.pyaldata_df[f"{brain_area_key}_spikes"] = np.nan
-                    tmp_df = pd.DataFrame(
-                        brain_area_spike_data["spikes"].T
-                    )  # Transpose
+                    tmp_df = pd.DataFrame(brain_area_spike_data["spikes"].T)  # Transpose
                     tmp_df["timestamp_idx"] = (
                         tmp_df.index
                     )  # Add timestamp for the following function
@@ -668,9 +651,7 @@ class ParsedNWBFile:
 
     def add_mouse_and_session(self):
         self.pyaldata_df["animal"] = [self.subject_id] * len(self.pyaldata_df)
-        self.pyaldata_df["session"] = [self.nwbfile_path.name[:-4]] * len(
-            self.pyaldata_df
-        )
+        self.pyaldata_df["session"] = [self.nwbfile_path.name[:-4]] * len(self.pyaldata_df)
         return
 
     def purge_nan_columns(self, column_subset="values_") -> None:
@@ -812,7 +793,9 @@ class ParsedNWBFile:
         return
 
 
-def run_pyaldata_conversion(session_path: Path, kilosort_flag: bool = True) -> None:
+def run_pyaldata_conversion(
+    session_path: Path, kilosort_flag: bool, mapping: str | None
+) -> None:
     """
     Main pyaldaya conversion routine. Creates pyaldata file for a specific session. It will
     also create nwb file if it doesn't exist and kilosort if indicated
@@ -836,7 +819,7 @@ def run_pyaldata_conversion(session_path: Path, kilosort_flag: bool = True) -> N
         logger.warning(
             f"NWB file: {session_path.name}.nwb not found. Running .nwb conversion"
         )
-        run_nwb_conversion(session_path, kilosort_flag)  # Creates .nwb file
+        run_nwb_conversion(session_path, kilosort_flag, mapping)  # Creates .nwb file
     elif len(nwbfile_path) > 1:
         raise ValueError("Too many nwb files in session folder")
 
