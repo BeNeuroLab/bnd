@@ -27,27 +27,9 @@ app = typer.Typer(
 
 @app.command()
 def to_pyal(
-    session_name: Annotated[
-        str,
-        typer.Argument(help="Session name to convert"),
-    ],
-    kilosort: Annotated[
-        bool,
-        typer.Option(
-            "--kilosort/--dont-kilosort",
-            "-k/-K",
-            help="Run kilosort if available (-k) or dont (-K).",
-        ),
-    ] = True,
-    mapping: Annotated[
-        str,
-        typer.Option(
-            "-m",
-            "--mapping",
-            help="Specify the channel mapping method: 'default' or 'custom.",
-            case_sensitive=False,
-        ),
-    ] = None,
+    session_name: str = typer.Argument(..., help="Session name to convert"),
+    kilosort_flag: bool = typer.Option(True, "-k/-K", "--kilosort/--dont-kilosort", help="Run kilosort if available (-k) or dont (-K)."),
+    custom_map: bool = typer.Option(False, "--custom-map/--default-map", help="Run conversion with default channel map or custom one")
 ) -> None:
     """
     Convert session data into a pyaldata dataframe and saves it as a .mat
@@ -75,7 +57,7 @@ def to_pyal(
     _check_session_directory(session_path)
 
     # Run pipeline
-    run_pyaldata_conversion(session_path, kilosort, map)
+    run_pyaldata_conversion(session_path, kilosort_flag, custom_map)
 
     return
 
@@ -83,23 +65,10 @@ def to_pyal(
 @app.command()
 def to_nwb(
     session_name: str,
-    kilosort_flag: Annotated[
-        bool,
-        typer.Option(
-            "--kilosort/--dont-kilosort",
-            "-k/-K",
-            help="Run kilosort if not available (-k) or dont (-K).",
-        ),
-    ] = False,
-    mapping: Annotated[
-        str,
-        typer.Option(
-            "-m",
-            "--map",
-            help="Specify the channel mapping method: 'default' or 'custom.",
-            case_sensitive=False,
-        ),
-    ] = None,
+    kilosort_flag: bool = typer.Option(True, "-k/-K", "--kilosort/--dont-kilosort",
+                                       help="Run kilosort if available (-k) or dont (-K)."),
+    custom_map: bool = typer.Option(False, "--custom-map/--default-map",
+                                    help="Run conversion with default channel map or custom one")
 ) -> None:
     """
     Convert session data into a nwb file and saves it as a .nwb
@@ -112,7 +81,7 @@ def to_nwb(
         `bnd to-nwb M037_2024_01_01_10_00`
     """
     # TODO: Add channel map argument: no-map, default-map, custom-map
-    _check_processing_dependencies()
+    # _check_processing_dependencies()
     from bnd.pipeline.nwb import run_nwb_conversion
 
     config = _load_config()
@@ -122,7 +91,7 @@ def to_nwb(
     _check_session_directory(session_path)
 
     # Run pipeline
-    run_nwb_conversion(session_path, kilosort_flag, mapping)
+    run_nwb_conversion(session_path, kilosort_flag, custom_map)
     return
 
 
