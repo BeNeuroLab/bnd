@@ -18,16 +18,24 @@ except ImportError as e:
     ) from e
 
 
-def _read_probe_type(meta_file_path):
+def _read_probe_type(meta_file_path: str) -> str:
     with open(meta_file_path, "r") as meta_file:
         for line in meta_file:
             if "imDatPrb_type" in line:
                 _, value = line.strip().split("=")
-                return int(value)
-    return None
+                break
+        
+        if int(value) == 0:
+            probe_type = "neuropixPhase3B1_kilosortChanMap.mat"
+        elif int(value) == 21:
+            probe_type = "NP2_kilosortChanMap.mat"
+        else:
+            raise ValueError("Probe type not recogised. It appears to be different from Npx 1.0 or 2.0")
+    return probe_type
 
 
 def run_kilosort_on_stream(
+    config: Config,
     probe_folder_path: Path,
     recording_path: Path,
     session_path: Path,
@@ -56,9 +64,6 @@ def run_kilosort_on_stream(
     sorter_params = {
         "n_chan_bin": 385,
     }
-    breakpoint()
-
-    probe_type = _read_probe_type()
 
     ksort_output_path = (
         session_path
@@ -75,6 +80,10 @@ def run_kilosort_on_stream(
     if any(PROBE_DIR.glob(f"{probe_name}")):
         # Sometimes the gateway can throw an error so just double check.
         download_probes()
+
+    # Find out which probe type we have
+    meta_file_path = config.get_subdirectories_from_pattern(probe_folder_path, "*ap.meta")
+    probe_name = _read_probe_type(str(meta_file_path[0]))
 
     _ = run_kilosort(
         settings=sorter_params,
@@ -117,7 +126,7 @@ def run_kilosort_on_recording(
     for probe_path in probe_paths:
         logger.info(f"Processing probe: {probe_path.name[-5:]}")
 
-        run_kilosort_on_stream(probe_path, recording_path, session_path)
+        run_kilosort_on_stream(config, probe_path, recording_path, session_path)
 
     return
 
