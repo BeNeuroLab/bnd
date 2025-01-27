@@ -25,7 +25,16 @@ BeNeuro Lab, and a CLI tool called `bnd` for easy access to this functionality.
 3. Open either Miniconda prompt or Miniforge promt and run the following command. This 
    may take some time: 
    ```shell
-   conda env create --file=environment.yml
+   conda env create --file=env.yml
+   ```
+   or if you want the processing depedencies:
+   ```shell
+   conda env create --file=processing_env.yml
+   ```
+
+   If you installed the base environment and want to update later on:
+   ```shell
+   conda env update -n bnd --file=processing_env.yml
    ```
 4. Create your configuration file:
    ```shell
