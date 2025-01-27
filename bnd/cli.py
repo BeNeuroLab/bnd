@@ -135,30 +135,42 @@ def ksort(
 
 
 @app.command()
-def up():
+def up(
+    session_or_animal_name: Annotated[
+        str, typer.Argument(help="Animal or session name: M123 or M123_2000_02_03_14_15")
+    ],
+):
     """
-    Upload (raw) experimental data to the remote server of a single session.
+    Upload (raw) experimental data to the remote server.
 
-    \b
-    Example usage to upload data of a given session:
-        `bnd up M017_2024_03_12_18_45 -e`  # Uploads ephys
-    Example usage to upload data of last session of a given animal:
-        `bnd up M017 -e`  # Uploads ephys
+    Example usage to upload everything of a given session:
+        `bnd up M017_2024_03_12_18_45 -ev`
+    Example to upload the videos and ephys of the last session of a subject:
+        `bnd up M017 -evB`
     """
-    upload_session()
+    
+    upload_session(session_or_animal_name)
     return
 
 
 @app.command()
-def down():
+def down(
+    session_name: Annotated[
+        str,
+        typer.Argument(help="Name of session: M123_2000_02_03_14_15")
+    ],
+    max_size_MB: Annotated[
+        float,
+        typer.Option(help="Maximum size in MB. Any File smaller will be downloaded. Zero mean infinite size."),
+    ] = 0,
+):
     """
-    Download experimental data from the remote server of a single session.
+    Download (raw) experimental data from a given session from the remote server.
 
-    \b
-    Example usage to download data of a given session:
-        `bnd dl M017_2024_03_12_18_45 -e`  # Uploads ephys
+    Example usage to download everything:
+        `bnd dl M017_2024_03_12_18_45 -ev`
     """
-    download_session()
+    download_session(session_name, max_size_MB)
     return
 
 
