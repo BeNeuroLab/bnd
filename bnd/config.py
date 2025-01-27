@@ -40,7 +40,13 @@ class Config:
     """
 
     def __init__(self, env_path=_get_env_path()):
+        self.REMOTE_PATH = None
+        self.LOCAL_PATH = None
+        self.REPO_PATH = None
+        # Load the actual environment PATHs
         self.load_env(env_path)
+        self.datetime_pattern = "%Y_%m_%d_%H_%M"
+        self.animal_name_pattern = "M???"
 
     def load_env(self, env_path: Path):
         with open(env_path, "r") as file:
@@ -80,3 +86,4 @@ def _load_config() -> Config:
         raise FileNotFoundError("Config file not found. Run `bnd init` to create one.")
 
     return Config()
+
