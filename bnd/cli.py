@@ -28,8 +28,17 @@ app = typer.Typer(
 @app.command()
 def to_pyal(
     session_name: str = typer.Argument(..., help="Session name to convert"),
-    kilosort_flag: bool = typer.Option(True, "-k/-K", "--kilosort/--dont-kilosort", help="Run kilosort if available (-k) or dont (-K)."),
-    custom_map: bool = typer.Option(False, "--custom-map/--default-map", help="Run conversion with default channel map or custom one")
+    kilosort_flag: bool = typer.Option(
+        True,
+        "-k/-K",
+        "--kilosort/--dont-kilosort",
+        help="Run kilosort if available (-k) or dont (-K).",
+    ),
+    custom_map: bool = typer.Option(
+        False,
+        "--custom-map/--default-map",
+        help="Run conversion with default channel map or custom one",
+    ),
 ) -> None:
     """
     Convert session data into a pyaldata dataframe and saves it as a .mat
@@ -65,10 +74,17 @@ def to_pyal(
 @app.command()
 def to_nwb(
     session_name: str,
-    kilosort_flag: bool = typer.Option(True, "-k/-K", "--kilosort/--dont-kilosort",
-                                       help="Run kilosort if available (-k) or dont (-K)."),
-    custom_map: bool = typer.Option(False, "--custom-map/--default-map",
-                                    help="Run conversion with default channel map or custom one")
+    kilosort_flag: bool = typer.Option(
+        True,
+        "-k/-K",
+        "--kilosort/--dont-kilosort",
+        help="Run kilosort if available (-k) or dont (-K).",
+    ),
+    custom_map: bool = typer.Option(
+        False,
+        "--custom-map/--default-map",
+        help="Run conversion with default channel map or custom one",
+    ),
 ) -> None:
     """
     Convert session data into a nwb file and saves it as a .nwb

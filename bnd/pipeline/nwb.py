@@ -76,10 +76,14 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
 
     # Run kilosort if needed
     # if kilosort_flag:
-        # run_kilosort_on_session(session_path)
+    # run_kilosort_on_session(session_path)
 
     # specify where the data should be read from by the converter
-    source_data = dict(PyControl={"file_path": str(session_path), }, )
+    source_data = dict(
+        PyControl={
+            "file_path": str(session_path),
+        },
+    )
     breakpoint()
     _try_adding_kilosort_to_source_data(source_data, session_path)
     _try_adding_anipose_to_source_data(source_data, session_path)
@@ -89,12 +93,15 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
 
     metadata = converter.get_metadata()
 
-    metadata["NWBFile"].deep_update(lab="Be.Neuro Lab",
-        institution="Imperial College London", )
+    metadata["NWBFile"].deep_update(
+        lab="Be.Neuro Lab",
+        institution="Imperial College London",
+    )
 
-    converter.run_conversion(metadata=metadata, nwbfile_path=nwb_file_output_path, )
+    converter.run_conversion(
+        metadata=metadata,
+        nwbfile_path=nwb_file_output_path,
+    )
     logger.info(f"Successfully saved file {nwb_file_output_path.name}")
-
-
 
     return
