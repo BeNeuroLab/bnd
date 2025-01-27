@@ -28,13 +28,16 @@ app = typer.Typer(
 
 @app.command()
 def to_pyal(
-    session_name: str,
+    session_name: Annotated[
+        str,
+        typer.Argument(help="Session name to convert"),
+    ],
     kilosort: Annotated[
         bool,
         typer.Option(
             "--kilosort/--dont-kilosort",
             "-k/-K",
-            help="Run kilosort if not available (-k) or dont (-K).",
+            help="Run kilosort if available (-k) or dont (-K).",
         ),
     ] = False,
 ) -> None:
@@ -42,7 +45,7 @@ def to_pyal(
     Convert session data into a pyaldata dataframe and saves it as a .mat
 
     \b
-    If no .nwb file is present it will automatically generate one and if an nwb file is present it will skip it. If you want to generate a new one run `bnd to-nwb`
+    If no .nwb file is present it will automatically generate one and if a nwb file is present it will skip it. If you want to generate a new one run `bnd to-nwb`
 
     \b
     If no kilosorted data is available it will not kilosort by default. If you want to kilosort add the flag `-k`
@@ -51,6 +54,8 @@ def to_pyal(
     Basic usage:
         `bnd to-pyal M037_2024_01_01_10_00 -k` Kilosorts data and converts to pyaldata
     """
+    # TODO: Add channel map argument: no-map, default-map, custom-map
+
     # Load config and get session path
     config = _load_config()
     session_path = config.get_local_session_path(session_name)
@@ -100,7 +105,10 @@ def to_nwb(
 
 @app.command()
 def ksort(
-    session_name: str = typer.Argument(..., help="Session name to kilosort"),
+    session_name: Annotated[
+        str,
+        typer.Argument(help="Session name to kilosort"),
+    ],
 ) -> None:
     """
     Kilosorts data from a single session.

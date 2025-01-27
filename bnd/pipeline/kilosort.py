@@ -18,6 +18,15 @@ except ImportError as e:
     ) from e
 
 
+def _read_probe_type(meta_file_path):
+    with open(meta_file_path, "r") as meta_file:
+        for line in meta_file:
+            if "imDatPrb_type" in line:
+                _, value = line.strip().split("=")
+                return int(value)
+    return None
+
+
 def run_kilosort_on_stream(
     probe_folder_path: Path,
     recording_path: Path,
@@ -47,6 +56,9 @@ def run_kilosort_on_stream(
     sorter_params = {
         "n_chan_bin": 385,
     }
+    breakpoint()
+
+    probe_type = _read_probe_type()
 
     ksort_output_path = (
         session_path
