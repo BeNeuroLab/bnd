@@ -3,17 +3,40 @@
 from pathlib import Path
 import shutil
 
-from bnd.config import (
-    _load_config,
-    find_file,
-    list_dirs,
-    list_session_datetime,
-    get_last_session,
-)
+from bnd.config import _load_config
 
+def upload_session(session_name: Path) -> None:
+    """
+    Upload a session to the server.
+    Every file in the session folder will get uploaded.
+    No file on the server will get overwritten
+    """
+    config = _load_config()
+    remote_session_path = config.get_remote_session_path(session_name)
+    local_session_path  = config.get_local_session_path(session_name)
 
-def upload_session():
-    return
+    local_files = local_session_path.rglob("*")
+    remote_files = list(remote_session_path.rglob("*"))
+    assert isinstance(remote_files, list), \
+        "`remote_files` must be a list, otherwise the list comprehension below will break"
+    pending_local_files = [
+        file
+        for file in local_files
+        if config.convert_to_remote(file) not in remote_files
+        and file.is_file()
+    ]
+
+    for file in pending_local_files:
+        remote_file = config.convert_to_remote(file)
+        assert not remote_file.exists(), \
+            "Remote file already exists. This should not happen."
+        # Ensure the destination directory exists
+        remote_file.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(file, remote_file)
+        print(f"Uploaded {file.name}")
+    
+    print("Upload complete.")
+
 
 
 def download_session(
@@ -22,7 +45,7 @@ def download_session(
     do_video: bool
 ) -> None:
     """
-    Download a session from the remote server.
+    Download a session from the server.
     """
     config = _load_config()
 
@@ -54,4 +77,4 @@ def download_session(
             print(f"Downloaded {file.name}")
         else:
             print(f"File {file.name} is too large. Skipping.")
-    return
+    print("Download complete.")
