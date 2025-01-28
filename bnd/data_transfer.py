@@ -30,6 +30,10 @@ def download_session(
     """
     Download a session from the remote server.
     """
+    if int(max_size_MB) <= 0:
+        max_size = float('inf')
+    else:
+        max_size = max_size_MB / 1024  # convert to bytes
     remote_session_path = config.get_remote_session_path(session_name)
     local_session_path  = config.get_local_session_path(session_name)
     if local_session_path.exists():
@@ -37,9 +41,19 @@ def download_session(
         return
     remote_files = remote_session_path.rglob("*")
     
+    for file in remote_files:
+        if file.suffix in config.video_formats:
+            continue  # video files dealt with later
+
+        local_file = config.convert_to_local(file)
+        assert not local_file.exists(), "Local file already exists. This should not happen."
+        
+        if file.stat().st_size < max_size:
+            with Progress() as progress:
+                with progress.open(file, "rb", description=file.name) as src:
+                    with open(local_file, "wb") as dst:
+                        shutil.copyfileobj(src, dst)
+        else:
+            print(f"File {file.name} is too large. Skipping.")
     
-    with Progress() as progress:
-        desc = os.path.basename(sys.argv[1])
-        with progress.open(sys.argv[1], "rb", description=desc) as src:
-            with open(sys.argv[2], "wb") as dst:
-                shutil.copyfileobj(src, dst)
+    # TODO: handle video files
