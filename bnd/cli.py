@@ -11,6 +11,7 @@ from bnd.config import (
     _get_env_path,
     _get_package_path,
     _load_config,
+    get_last_session,
 )
 from bnd.data_transfer import download_session, upload_session
 from bnd.pipeline import _check_processing_dependencies
@@ -144,32 +145,59 @@ def ksort(
 
 
 @app.command()
-def up():
+def up(
+    session_or_animal_name: Annotated[
+        str,
+        typer.Argument(
+            help="Animal or session name: M123 or M123_2000_02_03_14_15"
+        ),
+    ],
+):
     """
-    Upload (raw) experimental data to the remote server of a single session.
-
-    \b
-    Example usage to upload data of a given session:
-        `bnd up M017_2024_03_12_18_45 -e`  # Uploads ephys
-    Example usage to upload data of last session of a given animal:
-        `bnd up M017 -e`  # Uploads ephys
+    Upload data to the server. If the file exists on the server, it won't be replaced.
+    Every file in the session folder will get uploaded.
+    
+    Example usage to upload everything of a given session:
+        `bnd up M017_2024_03_12_18_45`
+    Upload everything of the last session:
+        `bnd up M017`
     """
-    upload_session()
-    return
-
+    if len(session_or_animal_name) > 4:  # session name
+        upload_session(session_or_animal_name)
+    elif len(session_or_animal_name) == 4:  # animal name
+        config = _load_config()
+        last_session = get_last_session(config.LOCAL_PATH / "raw" / session_or_animal_name)
+        upload_session(last_session)
+    else:
+        raise ValueError("Input must be either a session or an animal name.")
 
 @app.command()
-def down():
+def down(
+    session_name: Annotated[
+        str,
+        typer.Argument(help="Name of session: M123_2000_02_03_14_15")
+    ],
+    max_size_MB: Annotated[
+        float,
+        typer.Option("--max-size", help="Maximum size in MB. Any File smaller will be downloaded. Zero mean infinite size."),
+    ] = 0,
+    do_video: Annotated[
+        bool,
+        typer.Option(
+            "--video/--no-video",
+            "-v/-V",
+            help="Download video files as well, if they are smaller than `--max-size`.",
+        ),
+    ] = False,
+):
     """
-    Download experimental data from the remote server of a single session.
+    Download experimental data from a given session from the remote server.
 
-    \b
-    Example usage to download data of a given session:
-        `bnd dl M017_2024_03_12_18_45 -e`  # Uploads ephys
+    Example usage to download everything:
+        `bnd down M017_2024_03_12_18_45 -v` will download everything
+        `bnd down M017_2024_03_12_18_45 --max-size=50` will download files smaller than 50MB
     """
-    download_session()
-    return
-
+    download_session(session_name, max_size_MB, do_video)
 
 # =================================== Updating ==========================================
 

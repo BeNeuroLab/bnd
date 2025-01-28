@@ -1,4 +1,5 @@
 from pathlib import Path
+import datetime
 
 
 def _get_package_path() -> Path:
@@ -40,7 +41,14 @@ class Config:
     """
 
     def __init__(self, env_path=_get_env_path()):
+        self.REMOTE_PATH = None
+        self.LOCAL_PATH = None
+        self.REPO_PATH = None
+        # Load the actual environment PATHs
         self.load_env(env_path)
+        self.datetime_pattern = "%Y_%m_%d_%H_%M"
+        self.animal_name_pattern = "M???"
+        self.video_formats = (".avi", ".mp4", ".AVI", ".MP4")
 
     def load_env(self, env_path: Path):
         with open(env_path, "r") as file:
@@ -56,14 +64,30 @@ class Config:
                 # Set as environment variable
                 setattr(self, key, Path(value))
 
-    @staticmethod
-    def get_animal_name(session_name) -> str:
-        return session_name[:4]
-
-    def get_local_session_path(self, session_name: str):
+    def get_remote_session_path(self, session_name: str) -> Path:
+        animal = self.get_animal_name(session_name)
+        remote_session_path = self.REMOTE_PATH / "raw" / animal / session_name
+        return remote_session_path
+    
+    def get_local_session_path(self, session_name: str) -> Path:
         animal = self.get_animal_name(session_name)
         local_session_path = self.LOCAL_PATH / "raw" / animal / session_name
         return local_session_path
+
+    def convert_to_local(self, remote_path: Path) -> Path:
+        "convert a remote path to a local path"
+        assert str(remote_path).startswith(str(self.REMOTE_PATH)), "Path is not in the remote directory"
+        return self.LOCAL_PATH / remote_path.relative_to(self.REMOTE_PATH)
+
+    def convert_to_remote(self, local_path: Path) -> Path:
+        "convert a local path to a remote path"
+        assert str(local_path).startswith(str(self.LOCAL_PATH)), "Path is not in the local directory"
+        return self.REMOTE_PATH / local_path.relative_to(self.LOCAL_PATH)
+
+
+    @staticmethod
+    def get_animal_name(session_name) -> str:
+        return session_name[:4]
 
     @staticmethod
     def get_subdirectories_from_pattern(directory: Path, subdir_pattern: str):
@@ -80,3 +104,69 @@ def _load_config() -> Config:
         raise FileNotFoundError("Config file not found. Run `bnd init` to create one.")
 
     return Config()
+
+def find_file(
+    main_path: str | Path,
+    extension: tuple[str | Path] = ('.txt',)
+) -> list[Path]:
+    """
+    This function finds all the file types specified by 'extension' in the 'main_path' directory
+    and all its subdirectories and their sub-subdirectories etc., 
+    and returns a list of all file paths
+    'extension' is a list of desired file extensions: ['.dat','.prm']
+    """
+    if isinstance(main_path, str):
+        path = Path(main_path)
+    else:
+        path = main_path
+
+    if isinstance(extension, str):
+        extension=extension.split()   #turning extension into a list with a single element
+
+    return [Path(walking[0] / goodfile) for walking in path.walk()
+            for goodfile in walking[2] for ext in extension if goodfile.endswith(ext)]
+
+
+def list_dirs(main_path: str | Path) -> list[str]:
+    "List the names (strings) of directories under a path"
+    # Create a Path object from the provided path string
+    if isinstance(main_path, str):
+        p = Path(main_path)
+    else:
+        p = main_path
+    # List all directories in the given path
+    directories = [d.name for d in p.iterdir() if d.is_dir()]
+    return directories
+
+
+def list_session_datetime(animal_path: str | Path) -> tuple[list[datetime.date], list[str]]:
+    """
+    List and sort the datetimes of the sessions in a given path
+    animal_path: path to the animal directory containing the session directories: /data/raw/M034/
+    Return: - list of datetime objects sorted in ascending order, 
+            - list of session names in the format M034_2024_07_12_10_00
+    """
+    datetime_format = _load_config().datetime_pattern
+    # List all directories in the given path
+    session_list = list_dirs(Path(animal_path))
+    session_datetime_list = [
+        datetime.datetime.strptime(s[5:], datetime_format) 
+        for s in session_list]
+    session_datetime_list.sort()
+    sort_session_list = [
+        f"{Path(animal_path).name}_{s.strftime(datetime_format)}"
+        for s in session_datetime_list]
+
+    return session_datetime_list, sort_session_list
+
+
+def get_last_session(animal_path: str | Path) -> Path:
+    """
+    Get the name of the last session for a given animal: M034_2024_07_12_10_00
+    animal_path: path to the directory containing the session directories : /data/raw/M034/
+    """
+    last_session = list_session_datetime(Path(animal_path))[1][-1]
+    assert (Path(animal_path) / last_session).is_dir(), \
+        f"Session {last_session} not found in {animal_path}"
+
+    return last_session
