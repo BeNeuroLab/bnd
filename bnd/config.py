@@ -76,10 +76,12 @@ class Config:
 
     def convert_to_local(self, remote_path: Path) -> Path:
         "convert a remote path to a local path"
+        assert str(remote_path).startswith(str(self.REMOTE_PATH)), "Path is not in the remote directory"
         return self.LOCAL_PATH / remote_path.relative_to(self.REMOTE_PATH)
 
     def convert_to_remote(self, local_path: Path) -> Path:
         "convert a local path to a remote path"
+        assert str(local_path).startswith(str(self.LOCAL_PATH)), "Path is not in the local directory"
         return self.REMOTE_PATH / local_path.relative_to(self.LOCAL_PATH)
 
 
