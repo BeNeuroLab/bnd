@@ -64,14 +64,20 @@ class Config:
                 # Set as environment variable
                 setattr(self, key, Path(value))
 
-    @staticmethod
-    def get_animal_name(session_name) -> str:
-        return session_name[:4]
-
-    def get_local_session_path(self, session_name: str):
+    def get_remote_session_path(self, session_name: str) -> Path:
+        animal = self.get_animal_name(session_name)
+        remote_session_path = self.REMOTE_PATH / "raw" / animal / session_name
+        return remote_session_path
+    
+    def get_local_session_path(self, session_name: str) -> Path:
         animal = self.get_animal_name(session_name)
         local_session_path = self.LOCAL_PATH / "raw" / animal / session_name
         return local_session_path
+
+
+    @staticmethod
+    def get_animal_name(session_name) -> str:
+        return session_name[:4]
 
     @staticmethod
     def get_subdirectories_from_pattern(directory: Path, subdir_pattern: str):
