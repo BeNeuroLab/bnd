@@ -11,6 +11,7 @@ from bnd.config import (
     _get_env_path,
     _get_package_path,
     _load_config,
+    get_last_session,
 )
 from bnd.data_transfer import download_session, upload_session
 from bnd.pipeline.nwb import run_nwb_conversion
@@ -137,21 +138,29 @@ def ksort(
 @app.command()
 def up(
     session_or_animal_name: Annotated[
-        str, typer.Argument(help="Animal or session name: M123 or M123_2000_02_03_14_15")
+        str,
+        typer.Argument(
+            help="Animal or session name: M123 or M123_2000_02_03_14_15"
+        ),
     ],
 ):
     """
-    Upload (raw) experimental data to the remote server.
-
-    Example usage to upload everything of a given session:
-        `bnd up M017_2024_03_12_18_45 -ev`
-    Example to upload the videos and ephys of the last session of a subject:
-        `bnd up M017 -evB`
-    """
+    Upload data to the server. If the file exists on the server, it won't be replaced.
+    Every file in the session folder will get uploaded.
     
-    upload_session(session_or_animal_name)
-    return
-
+    Example usage to upload everything of a given session:
+        `bnd up M017_2024_03_12_18_45`
+    Upload everything of the last session:
+        `bnd up M017`
+    """
+    if len(session_or_animal_name) > 4:  # session name
+        upload_session(session_or_animal_name)
+    elif len(session_or_animal_name) == 4:  # animal name
+        config = _load_config()
+        last_session = get_last_session(config.LOCAL_PATH / "raw" / session_or_animal_name)
+        upload_session(last_session)
+    else:
+        raise ValueError("Input must be either a session or an animal name.")
 
 @app.command()
 def down(
@@ -173,14 +182,13 @@ def down(
     ] = False,
 ):
     """
-    Download (raw) experimental data from a given session from the remote server.
+    Download experimental data from a given session from the remote server.
 
     Example usage to download everything:
-        `bnd dl M017_2024_03_12_18_45 -ev`
+        `bnd down M017_2024_03_12_18_45 -v` will download everything
+        `bnd down M017_2024_03_12_18_45 --max-size=50` will download files smaller than 50MB
     """
     download_session(session_name, max_size_MB, do_video)
-    return
-
 
 # =================================== Updating ==========================================
 
