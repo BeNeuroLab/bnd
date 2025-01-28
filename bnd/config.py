@@ -74,6 +74,14 @@ class Config:
         local_session_path = self.LOCAL_PATH / "raw" / animal / session_name
         return local_session_path
 
+    def convert_to_local(self, remote_path: Path) -> Path:
+        "convert a remote path to a local path"
+        return self.LOCAL_PATH / remote_path.relative_to(self.REMOTE_PATH)
+
+    def convert_to_remote(self, local_path: Path) -> Path:
+        "convert a local path to a remote path"
+        return self.REMOTE_PATH / local_path.relative_to(self.LOCAL_PATH)
+
 
     @staticmethod
     def get_animal_name(session_name) -> str:
