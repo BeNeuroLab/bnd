@@ -140,7 +140,8 @@ def list_dirs(main_path: str | Path) -> list[str]:
 
 
 def list_session_datetime(animal_path: str | Path) -> tuple[list[datetime.date], list[str]]:
-    """List and sort the datetimes of the sessions in a given path
+    """
+    List and sort the datetimes of the sessions in a given path
     animal_path: path to the animal directory containing the session directories: /data/raw/M034/
     Return: - list of datetime objects sorted in ascending order, 
             - list of session names in the format M034_2024_07_12_10_00
@@ -160,12 +161,12 @@ def list_session_datetime(animal_path: str | Path) -> tuple[list[datetime.date],
 
 
 def get_last_session(animal_path: str | Path) -> Path:
-    """Get the name of the last session for a given animal: M034_2024_07_12_10_00
+    """
+    Get the name of the last session for a given animal: M034_2024_07_12_10_00
     animal_path: path to the directory containing the session directories : /data/raw/M034/
     """
-
     last_session = list_session_datetime(Path(animal_path))[1][-1]
-
-    assert (Path(animal_path) / last_session).is_dir(), f"Session {last_session} not found in {animal_path}"
+    assert (Path(animal_path) / last_session).is_dir(), \
+        f"Session {last_session} not found in {animal_path}"
 
     return last_session
