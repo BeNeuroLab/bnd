@@ -48,7 +48,7 @@ class Config:
         self.load_env(env_path)
         self.datetime_pattern = "%Y_%m_%d_%H_%M"
         self.animal_name_pattern = "M???"
-        self.video_format = (".avi", ".mp4", ".AVI", ".MP4")
+        self.video_formats = (".avi", ".mp4", ".AVI", ".MP4")
 
     def load_env(self, env_path: Path):
         with open(env_path, "r") as file:
