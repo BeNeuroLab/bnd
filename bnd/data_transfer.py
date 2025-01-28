@@ -36,8 +36,10 @@ def download_session(
     if local_session_path.exists():
         print(f"Session {session_name} already exists locally.")
         return
-    remote_files = remote_session_path.rglob("*")
-    
+
+    # Excluding directories as `rglob()` returns directories as well    
+    remote_files = [file for file in remote_session_path.rglob("*") if file.is_file()]
+
     for file in remote_files:
         if file.suffix in config.video_formats and not do_video:
             continue  # skip video files
