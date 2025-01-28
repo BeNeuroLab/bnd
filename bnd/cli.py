@@ -161,8 +161,16 @@ def down(
     ],
     max_size_MB: Annotated[
         float,
-        typer.Option(help="Maximum size in MB. Any File smaller will be downloaded. Zero mean infinite size."),
+        typer.Option("--max-size", help="Maximum size in MB. Any File smaller will be downloaded. Zero mean infinite size."),
     ] = 0,
+    do_video: Annotated[
+        bool,
+        typer.Option(
+            "--video/--no-video",
+            "-v/-V",
+            help="Download video files as well, if they are smaller than `--max-size`.",
+        ),
+    ] = False,
 ):
     """
     Download (raw) experimental data from a given session from the remote server.
@@ -170,7 +178,7 @@ def down(
     Example usage to download everything:
         `bnd dl M017_2024_03_12_18_45 -ev`
     """
-    download_session(session_name, max_size_MB)
+    download_session(session_name, max_size_MB, do_video)
     return
 
 
