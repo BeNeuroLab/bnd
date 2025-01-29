@@ -77,17 +77,17 @@ def download_session(session_name: str, max_size_MB: float, do_video: bool) -> N
 
     for file in remote_files:
         if file.suffix in config.video_formats and not do_video:
+            logger.info(f'"{file.name}" is a video file. Skipping.')
             continue  # skip video files
 
         if file.stat().st_size < max_size:
             local_file = config.convert_to_local(file)
-            assert (
-                not local_file.exists()
-            ), "Local file already exists. This should not happen."
+            assert not local_file.exists(), \
+                "Local file already exists. This should not happen."
             # Ensure the destination directory exists
             local_file.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(file, local_file)
-            logger.info(f"Downloaded {file.name}")
+            logger.info(f'Downloaded "{file.name}"')
         else:
-            logger.warning(f"File {file.name} is too large. Skipping.")
+            logger.warning(f'"{file.name}" is too large. Skipping.')
     logger.info("Download complete.")
