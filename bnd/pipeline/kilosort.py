@@ -137,13 +137,6 @@ def run_kilosort_on_session(session_path: Path) -> None:
     -------
 
     """
-    # Check kilosort is installed in environment
-    if torch.cuda.is_available():
-        logger.info(f"CUDA is available. GPU device: {torch.cuda.get_device_name(0)}")
-    else:
-        logger.warning("CUDA is not available. GPU computations will not be enabled.")
-        return
-
     config = _load_config()
 
     if isinstance(session_path, str):
@@ -163,6 +156,12 @@ def run_kilosort_on_session(session_path: Path) -> None:
         logger.warning(f"Kilosort output already exists. Skipping kilosort call")
 
     else:
+        # Check kilosort is installed in environment
+        if torch.cuda.is_available():
+            logger.info(f"CUDA is available. GPU device: {torch.cuda.get_device_name(0)}")
+        else:
+            logger.warning("CUDA is not available. GPU computations will not be enabled.")
+            return
         for recording_path in ephys_recording_folders:
             logger.info(f"Processing recording: {recording_path.name}")
             run_kilosort_on_recording(
