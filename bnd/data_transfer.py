@@ -45,9 +45,8 @@ def upload_session(session_name: str) -> None:
     # Upload the files
     for file in pending_local_files:
         remote_file = config.convert_to_remote(file)
-        assert (
-            not remote_file.exists()
-        ), "Remote file already exists. This should not happen."
+        assert not remote_file.exists(), \
+            "Remote file already exists. This should not happen."
         # Ensure the destination directory exists
         remote_file.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(file, remote_file)
