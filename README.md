@@ -4,7 +4,7 @@ A collection of functions for managing the experimental data recorded in the
 BeNeuro Lab, and a CLI tool called `bnd` for easy access to this functionality.
 
 # TODOs:
-   - Create `up` and `down` functions
+   - Create `up` and `dl` functions
    - Create `to-pyal` pipeline
      - Create `to-nwb` pipeline
      - Create `ksort` pipeline without docker
