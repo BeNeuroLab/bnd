@@ -812,7 +812,7 @@ def run_pyaldata_conversion(
     """
     # Get config
     config = _load_config()
-    # TODO: Add index trial length
+
     # Check session_path is Path object
     if isinstance(session_path, str):
         session_path = Path(session_path)
