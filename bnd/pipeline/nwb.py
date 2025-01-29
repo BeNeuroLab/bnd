@@ -3,7 +3,6 @@ from pathlib import Path
 from bnd import set_logging
 from bnd.config import _load_config
 from bnd.pipeline.kilosort import run_kilosort_on_session
-from bnd.pipeline.nwbtools.base_converter import BeNeuroConverter
 
 from bnd.pipeline.kilosort import run_kilosort_on_session
 
