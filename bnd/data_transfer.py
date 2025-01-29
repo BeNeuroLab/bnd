@@ -29,11 +29,14 @@ def upload_session(session_name: str) -> None:
         if config.convert_to_remote(file) not in remote_files
         and file.is_file()
     ]
+    if not pending_local_files:
+        logger.info(f"No files to upload.")
+        return
 
     # Check if file names follow the session name convention
     for file in pending_local_files:
         if not config.file_name_ok(file.name):
-            logger.warning(f"Unusual file name: {file.name}")
+            logger.warning(f'Unusual file name: "{file.name}"')
 
     response = input(f"\nUpload session {session_name} (y/n)? ").strip().lower()
     if 'n' in response:
@@ -48,7 +51,7 @@ def upload_session(session_name: str) -> None:
         # Ensure the destination directory exists
         remote_file.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(file, remote_file)
-        logger.info(f"Uploaded {file.name}")
+        logger.info(f'Uploaded "{file.name}"')
     
     logger.info("Upload complete.")
 
