@@ -1,15 +1,13 @@
 # bnd : BeNeuroLab Data Organization
 
-A collection of functions for managing the experimental data recorded in the 
+A **lightweigth** collection of functions for managing the experimental data recorded in the 
 BeNeuro Lab, and a CLI tool called `bnd` for easy access to this functionality.
 
 # TODOs:
-   - Create `up` and `dl` functions
-   - Create `to-pyal` pipeline
-     - Create `to-nwb` pipeline
-     - Create `ksort` pipeline without docker
-   - Set up github action for environment
-   - Begin building some tests
+- Finish `KilosortInterface` in nwb conversion
+   - Add: custom / default mapping
+- Finish `AniposeInterface` in nwb conversion
+- Add `bnd up` test
 
 
 # Setting up
