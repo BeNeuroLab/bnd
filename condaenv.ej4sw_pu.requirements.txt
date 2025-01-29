@@ -1,0 +1,4 @@
+kilosort
+ndx_pose
+spike_interface
+-e ./

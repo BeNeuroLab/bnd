@@ -1,4 +1,4 @@
-name: bnd-test
+name: bnd-dev
 channels:
   - conda-forge
   - pytorch

@@ -10,7 +10,7 @@ def _check_processing_dependencies():
         from bnd.pipeline.pyaldata import run_pyaldata_conversion
     except Exception as e:
         raise ImportError(
-            "Could not import processing dependencies. Update your environment "
+            f"Could not import processing dependencies: {e}. Update your environment "
             "with `conda env update -n bnd --file=processing_env.yml`"
         )
     return

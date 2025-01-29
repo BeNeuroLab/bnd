@@ -5,7 +5,7 @@ from bnd.config import _load_config
 from bnd.pipeline.kilosort import run_kilosort_on_session
 from bnd.pipeline.nwbtools.base_converter import BeNeuroConverter
 
-# from bnd.pipeline.kilosort import run_kilosort_on_session
+from bnd.pipeline.kilosort import run_kilosort_on_session
 
 logger = set_logging(__name__)
 config = _load_config()
@@ -78,8 +78,6 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
     # Run kilosort if needed
     if kilosort_flag:
         run_kilosort_on_session(session_path)
-        else:
-            logger.info("No kilosort output. Consider running `bnd ksort`")
 
     # specify where the data should be read from by the converter
     source_data = dict(
