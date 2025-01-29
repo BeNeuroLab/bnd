@@ -1,5 +1,10 @@
+import re
+
+from datetime import datetime
 from pathlib import Path
-import datetime
+from bnd import set_logging
+
+logger = set_logging(__name__)
 
 
 def _get_package_path() -> Path:
@@ -47,7 +52,7 @@ class Config:
         # Load the actual environment PATHs
         self.load_env(env_path)
         self.datetime_pattern = "%Y_%m_%d_%H_%M"
-        self.animal_name_pattern = "M???"
+        self.session_name_re = r"^M\d{3}_(\d{4})_(\d{2})_(\d{2})_(\d{2})_(\d{2})"
         self.video_formats = (".avi", ".mp4", ".AVI", ".MP4")
 
     def load_env(self, env_path: Path):
@@ -83,6 +88,35 @@ class Config:
         "convert a local path to a remote path"
         assert str(local_path).startswith(str(self.LOCAL_PATH)), "Path is not in the local directory"
         return self.REMOTE_PATH / local_path.relative_to(self.LOCAL_PATH)
+
+    def file_name_ok(self, file_name: str) -> bool:
+        """
+        Check if the file name follows the session name convention
+        And the date-time is valid
+        Returns True if it is, False otherwise.
+        """
+        match = re.match(self.session_name_re, file_name)
+
+        if not match:
+            logger.error("file name not matching the pattern")
+            return False  # Doesn't match the expected pattern
+
+        # Extract the datetime parts
+        year, month, day, hour, minute = map(int, match.groups())
+
+        # Validate if it forms a correct date-time
+        try:
+            dt = datetime(year, month, day, hour, minute)
+        except ValueError:
+            logger.error("Invalid datetime")
+            return False
+
+        # Do not allow future dates
+        if dt.date() <= datetime.today().date():
+            return True
+        else:
+            logger.error("file has future date")
+            return False
 
 
     @staticmethod
@@ -150,7 +184,7 @@ def list_session_datetime(animal_path: str | Path) -> tuple[list[datetime.date],
     # List all directories in the given path
     session_list = list_dirs(Path(animal_path))
     session_datetime_list = [
-        datetime.datetime.strptime(s[5:], datetime_format) 
+        datetime.strptime(s[5:], datetime_format) 
         for s in session_list]
     session_datetime_list.sort()
     sort_session_list = [
@@ -160,7 +194,7 @@ def list_session_datetime(animal_path: str | Path) -> tuple[list[datetime.date],
     return session_datetime_list, sort_session_list
 
 
-def get_last_session(animal_path: str | Path) -> Path:
+def get_last_session(animal_path: str | Path) -> str:
     """
     Get the name of the last session for a given animal: M034_2024_07_12_10_00
     animal_path: path to the directory containing the session directories : /data/raw/M034/
