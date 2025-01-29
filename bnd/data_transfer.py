@@ -4,8 +4,12 @@ from pathlib import Path
 import shutil
 
 from bnd.config import _load_config
+from bnd import set_logging
 
-def upload_session(session_name: Path) -> None:
+logger = set_logging(__name__)
+
+
+def upload_session(session_name: str) -> None:
     """
     Upload a session to the server.
     Every file in the session folder will get uploaded.
@@ -15,7 +19,7 @@ def upload_session(session_name: Path) -> None:
     remote_session_path = config.get_remote_session_path(session_name)
     local_session_path  = config.get_local_session_path(session_name)
 
-    local_files = local_session_path.rglob("*")
+    local_files = list(local_session_path.rglob("*"))
     remote_files = list(remote_session_path.rglob("*"))
     assert isinstance(remote_files, list), \
         "`remote_files` must be a list, otherwise the list comprehension below will break"
@@ -26,6 +30,17 @@ def upload_session(session_name: Path) -> None:
         and file.is_file()
     ]
 
+    # Check if file names follow the session name convention
+    for file in pending_local_files:
+        if not config.file_name_ok(file.name):
+            logger.warning(f"Unusual file name: {file.name}")
+
+    response = input(f"\nUpload session {session_name} (y/n)? ").strip().lower()
+    if 'n' in response:
+        logger.info("Upload aborted.")
+        return
+
+    # Upload the files
     for file in pending_local_files:
         remote_file = config.convert_to_remote(file)
         assert not remote_file.exists(), \
@@ -33,10 +48,9 @@ def upload_session(session_name: Path) -> None:
         # Ensure the destination directory exists
         remote_file.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(file, remote_file)
-        print(f"Uploaded {file.name}")
+        logger.info(f"Uploaded {file.name}")
     
-    print("Upload complete.")
-
+    logger.info("Upload complete.")
 
 
 def download_session(
@@ -57,7 +71,7 @@ def download_session(
     remote_session_path = config.get_remote_session_path(session_name)
     local_session_path  = config.get_local_session_path(session_name)
     if local_session_path.exists():
-        print(f"Session {session_name} already exists locally.")
+        logger.error(f"Session {session_name} already exists locally.")
         return
 
     # Excluding directories as `rglob()` returns directories as well    
@@ -74,7 +88,7 @@ def download_session(
             # Ensure the destination directory exists
             local_file.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(file, local_file)
-            print(f"Downloaded {file.name}")
+            logger.info(f"Downloaded {file.name}")
         else:
-            print(f"File {file.name} is too large. Skipping.")
-    print("Download complete.")
+            logger.warning(f"File {file.name} is too large. Skipping.")
+    logger.info("Download complete.")
