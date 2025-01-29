@@ -797,7 +797,7 @@ def run_pyaldata_conversion(
     session_path: Path, kilosort_flag: bool, custom_map: bool
 ) -> None:
     """
-    Main pyaldaya conversion routine. Creates pyaldata file for a specific session. It will
+    Main pyaldata conversion routine. Creates pyaldata file for a specific session. It will
     also create nwb file if it doesn't exist and kilosort if indicated
 
     Parameters
@@ -812,7 +812,7 @@ def run_pyaldata_conversion(
     """
     # Get config
     config = _load_config()
-
+    # TODO: Add index trial length
     # Check session_path is Path object
     if isinstance(session_path, str):
         session_path = Path(session_path)

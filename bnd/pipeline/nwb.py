@@ -2,6 +2,7 @@ from pathlib import Path
 
 from bnd import set_logging
 from bnd.config import _load_config
+from bnd.pipeline.kilosort import run_kilosort_on_session
 from bnd.pipeline.nwbtools.base_converter import BeNeuroConverter
 
 # from bnd.pipeline.kilosort import run_kilosort_on_session
@@ -67,7 +68,7 @@ def _try_adding_anipose_to_source_data(source_data: dict, session_path: Path):
 
 
 def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool):
-
+    # TODO: Throw question on which recording to use if it finds many
     config = _load_config()
 
     # Check session_path is Path object
@@ -75,8 +76,8 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
         session_path = Path(session_path)
 
     # Run kilosort if needed
-    # if kilosort_flag:
-    # run_kilosort_on_session(session_path)
+    if kilosort_flag:
+        run_kilosort_on_session(session_path)
 
     # specify where the data should be read from by the converter
     source_data = dict(

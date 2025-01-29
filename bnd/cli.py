@@ -37,8 +37,9 @@ def to_pyal(
     ),
     custom_map: bool = typer.Option(
         False,
+        "-c/-C",
         "--custom-map/--default-map",
-        help="Run conversion with default channel map or custom one",
+        help="Run conversion with a custom map (-c) or the not (-C)",
     ),
 ) -> None:
     """
@@ -53,8 +54,7 @@ def to_pyal(
     \b
     Basic usage:
         `bnd to-pyal M037_2024_01_01_10_00  # Kilosorts data and converts to pyaldata
-        `bnd to-pyal M037_2024_01_01_10_00 -m default  # Uses pinpoint mapping output
-        `bnd to-pyal M037_2024_01_01_10_00 -m default   # Uses pinpoint mapping output
+        `bnd to-pyal M037_2024_01_01_10_00 -c  # Uses custom mapping
     """
     _check_processing_dependencies()
     from bnd.pipeline.pyaldata import run_pyaldata_conversion
@@ -83,8 +83,9 @@ def to_nwb(
     ),
     custom_map: bool = typer.Option(
         False,
+        "-c/-C",
         "--custom-map/--default-map",
-        help="Run conversion with default channel map or custom one",
+        help="Run conversion with a custom map (-c) or the not (-C)",
     ),
 ) -> None:
     """
@@ -96,6 +97,7 @@ def to_nwb(
     \b
     Basic usage:
         `bnd to-nwb M037_2024_01_01_10_00`
+        `bnd to-nwb M037_2024_01_01_10_00 -c`  # Use custom channel mapping
     """
     # TODO: Add channel map argument: no-map, default-map, custom-map
     # _check_processing_dependencies()
@@ -113,12 +115,7 @@ def to_nwb(
 
 
 @app.command()
-def ksort(
-    session_name: Annotated[
-        str,
-        typer.Argument(help="Session name to kilosort"),
-    ],
-) -> None:
+def ksort(session_name: str = typer.Argument(help="Session name to kilosort")) -> None:
     """
     Kilosorts data from a single session.
 
@@ -146,17 +143,14 @@ def ksort(
 
 @app.command()
 def up(
-    session_or_animal_name: Annotated[
-        str,
-        typer.Argument(
-            help="Animal or session name: M123 or M123_2000_02_03_14_15"
-        ),
-    ],
+    session_or_animal_name: str = typer.Argument(
+        help="Animal or session name: M123 or M123_2000_02_03_14_15"
+    ),
 ):
     """
     Upload data to the server. If the file exists on the server, it won't be replaced.
     Every file in the session folder will get uploaded.
-    
+
     Example usage to upload everything of a given session:
         `bnd up M017_2024_03_12_18_45`
     Upload everything of the last session:
@@ -171,24 +165,21 @@ def up(
     else:
         raise ValueError("Input must be either a session or an animal name.")
 
+
 @app.command()
 def down(
-    session_name: Annotated[
-        str,
-        typer.Argument(help="Name of session: M123_2000_02_03_14_15")
-    ],
-    max_size_MB: Annotated[
-        float,
-        typer.Option("--max-size", help="Maximum size in MB. Any File smaller will be downloaded. Zero mean infinite size."),
-    ] = 0,
-    do_video: Annotated[
-        bool,
-        typer.Option(
-            "--video/--no-video",
-            "-v/-V",
-            help="Download video files as well, if they are smaller than `--max-size`.",
-        ),
-    ] = False,
+    session_name: str = typer.Argument(help="Name of session: M123_2000_02_03_14_15"),
+    max_size_MB: float = typer.Option(
+        0,
+        "--max-size",
+        help="Maximum size in MB. Any File smaller will be downloaded. Zero mean infinite size.",
+    ),
+    do_video: bool = typer.Option(
+        False,
+        "--video/--no-video",
+        "-v/-V",
+        help="Download video files as well, if they are smaller than `--max-size`.",
+    ),
 ):
     """
     Download experimental data from a given session from the remote server.
@@ -198,6 +189,7 @@ def down(
         `bnd down M017_2024_03_12_18_45 --max-size=50` will download files smaller than 50MB
     """
     download_session(session_name, max_size_MB, do_video)
+
 
 # =================================== Updating ==========================================
 

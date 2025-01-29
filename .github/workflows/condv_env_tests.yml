@@ -11,7 +11,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: [ "3.10", "3.11", "3.12" ]
 
 
     steps:
@@ -21,7 +20,6 @@ jobs:
       - name: Set up Miniconda
         uses: conda-incubator/setup-miniconda@v2
         with:
-          python-version: ${{ matrix.python-version }}
           auto-update-conda: false
 
       - name: Initialize Conda (ubuntu only)  # Windows doesnt require conda initialization
@@ -35,4 +33,4 @@ jobs:
       - name: Create and activate Conda environment and install dependencies
         shell: bash -l {0}
         run: |
-          conda env create --file=./environment.yml
+          conda env create --file=./env.yml
