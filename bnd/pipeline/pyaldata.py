@@ -826,7 +826,7 @@ def run_pyaldata_conversion(
         run_nwb_conversion(session_path, kilosort_flag, custom_map)  # Creates .nwb file
     elif len(nwbfile_path) > 1:
         raise ValueError("Too many nwb files in session folder")
-
+    
     # Parse nwb data
     parsed_nwbfile = ParsedNWBFile(nwbfile_path)
 

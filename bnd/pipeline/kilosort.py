@@ -159,7 +159,7 @@ def run_kilosort_on_session(session_path: Path) -> None:
 
     elif kilosort_output_folders:
         logger.warning(
-            f"Kilosort output already exists"
+            f"Kilosort output already exists. Skipping kilosort call"
         )
 
     else:

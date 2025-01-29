@@ -1,10 +1,15 @@
+import os
 from pathlib import Path
+from rich import print
 
 from bnd import set_logging
 from bnd.config import _load_config
 from bnd.pipeline.kilosort import run_kilosort_on_session
+from bnd.pipeline.nwbtools.beneuro_converter import BeNeuroConverter
+
 
 from bnd.pipeline.kilosort import run_kilosort_on_session
+from bnd.pipeline.nwbtools.multiprobe_kilosort_interface import MultiProbeKiloSortInterface
 
 logger = set_logging(__name__)
 config = _load_config()
@@ -49,7 +54,7 @@ def _try_adding_anipose_to_source_data(source_data: dict, session_path: Path):
 
     if len(csv_paths) > 1:
         raise FileExistsError(
-            f"More than one pose estimation HDF file " f"found: {csv_paths}"
+            f"More than one pose estimation csv file " f"found: {csv_paths}"
         )
 
     csv_path = csv_paths[0]
@@ -74,10 +79,20 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
     if isinstance(session_path, str):
         session_path = Path(session_path)
 
+    # Set output path
+    nwb_file_output_path = session_path / f"{session_path.name}.nwb"
+    if nwb_file_output_path.exists():
+        response = input(f"File '{nwb_file_output_path.name}' already exists. Do you want to overwrite it? (y/n): ").strip().lower()
+        if response != "y":
+            logger.warning(f"Aborting nwb conversion")
+            return
+        else:
+            os.remove(nwb_file_output_path)
+        
     # Run kilosort if needed
     if kilosort_flag:
         run_kilosort_on_session(session_path)
-
+    
     # specify where the data should be read from by the converter
     source_data = dict(
         PyControl={
@@ -87,6 +102,7 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
 
     _try_adding_kilosort_to_source_data(source_data, session_path)
     _try_adding_anipose_to_source_data(source_data, session_path)
+    
 
     # finally, run the conversion
     converter = BeNeuroConverter(source_data, verbose=False)

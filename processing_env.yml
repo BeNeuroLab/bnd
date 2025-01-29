@@ -14,7 +14,9 @@ dependencies:
   - numpy
   - pandas
   - scipy
+  - spikeinterface
   - pip:
       - kilosort
       - ndx_pose
+      - neuroconv
       - -e ./
