@@ -150,10 +150,16 @@ def run_kilosort_on_session(session_path: Path) -> None:
         session_path = Path(session_path)
 
     ephys_recording_folders = config.get_subdirectories_from_pattern(session_path, "*_g?")
+    kilosort_output_folders = config.get_subdirectories_from_pattern(session_path, "*_ksort")
 
     if not ephys_recording_folders:
         logger.warning(
             f"No ephys folders found. Consider running `bnd dl {session_path.name} -e"
+        )
+
+    elif kilosort_output_folders:
+        logger.warning(
+            f"Kilosort output already exists"
         )
 
     else:

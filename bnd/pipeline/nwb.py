@@ -78,6 +78,8 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
     # Run kilosort if needed
     if kilosort_flag:
         run_kilosort_on_session(session_path)
+        else:
+            logger.info("No kilosort output. Consider running `bnd ksort`")
 
     # specify where the data should be read from by the converter
     source_data = dict(
@@ -85,7 +87,7 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
             "file_path": str(session_path),
         },
     )
-    breakpoint()
+
     _try_adding_kilosort_to_source_data(source_data, session_path)
     _try_adding_anipose_to_source_data(source_data, session_path)
 
