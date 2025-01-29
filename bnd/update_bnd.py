@@ -64,9 +64,7 @@ def _get_new_commits(repo_path: Path) -> list[str]:
     new_commits = _run_git_command(repo_path, ["log", "HEAD..origin/main", "--oneline"])
 
     # filter empty lines and strip whitespaces
-    return [
-        commit.strip() for commit in new_commits.split("\n") if commit.strip() != ""
-    ]
+    return [commit.strip() for commit in new_commits.split("\n") if commit.strip() != ""]
 
 
 def check_for_updates() -> bool:

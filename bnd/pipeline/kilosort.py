@@ -150,7 +150,9 @@ def run_kilosort_on_session(session_path: Path) -> None:
         session_path = Path(session_path)
 
     ephys_recording_folders = config.get_subdirectories_from_pattern(session_path, "*_g?")
-    kilosort_output_folders = config.get_subdirectories_from_pattern(session_path, "*_ksort")
+    kilosort_output_folders = config.get_subdirectories_from_pattern(
+        session_path, "*_ksort"
+    )
 
     if not ephys_recording_folders:
         logger.warning(
@@ -158,9 +160,7 @@ def run_kilosort_on_session(session_path: Path) -> None:
         )
 
     elif kilosort_output_folders:
-        logger.warning(
-            f"Kilosort output already exists. Skipping kilosort call"
-        )
+        logger.warning(f"Kilosort output already exists. Skipping kilosort call")
 
     else:
         for recording_path in ephys_recording_folders:

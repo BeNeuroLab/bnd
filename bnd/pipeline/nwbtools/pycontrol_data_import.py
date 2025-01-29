@@ -12,6 +12,7 @@ from bnd import set_logging
 
 logger = set_logging(__name__)
 
+
 Event = namedtuple("Event", ["time", "name"])
 State = namedtuple("State", ["time", "name", "duration"])
 Print = namedtuple("Print", ["time", "name", "value"])
