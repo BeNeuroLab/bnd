@@ -294,13 +294,11 @@ class ParsedNWBFile:
         with NWBHDF5IO(nwbfile_path, mode="r") as io:
             # General
             self.bin_size = 0.01
+            self.subject_id = nwbfile_path.name[:4]
 
             # Nwb file
             self.nwbfile_path = nwbfile_path
             self.nwbfile = io.read()
-
-            # Subject data
-            self.try_to_include_subject_info()
 
             # Processing modules
             self.try_to_parse_processing_module("behavior")
@@ -311,23 +309,6 @@ class ParsedNWBFile:
 
         logger.info("Parsed NWB file")
 
-    def try_to_include_subject_info(self) -> None:
-        """
-        Try to add subject information to instance
-
-        Returns
-        -------
-        """
-        if hasattr(self.nwbfile, "subject"):
-            if self.nwbfile.subject is not None:
-                self.subject_id = self.nwbfile.subject.subject_id
-                return
-
-        warnings.warn(
-            f"NWBFile {self.nwbfile_path.name} does not have subject information. Using animal name from session path"
-        )
-        self.subject_id = self.nwbfile_path.name[:4]
-        return
 
     def try_to_parse_processing_module(self, processing_key: str) -> None:
         """
@@ -366,11 +347,11 @@ class ParsedNWBFile:
                     self.parse_spike_data()
 
             else:
-                warnings.warn(
+                logger.warning(
                     f"NWBFile {self.nwbfile.processing.keys()} does not have {processing_key}"
                 )
         else:
-            warnings.warn(
+            logger.warning(
                 f"NWBFile {self.nwbfile_path.name} does not have processing module"
             )
 
@@ -455,7 +436,7 @@ class ParsedNWBFile:
 
         """
         if "Position" not in self.behavior.keys():
-            warnings.warn("No motion data available")
+            logger.warning("No motion data available")
             return
 
         ball_position_spatial_series = self.behavior["Position"].spatial_series[
@@ -473,7 +454,7 @@ class ParsedNWBFile:
 
         """
         if "Pose estimation" not in self.behavior.keys():
-            warnings.warn("No anipose data available")
+            logger.warning("No anipose data available")
             return
 
         anipose_data_dict = self.behavior["Pose estimation"].pose_estimation_series
@@ -528,7 +509,7 @@ class ParsedNWBFile:
         self.pyaldata_df["trial_name"] = self.pycontrol_states.state_name[:]
 
         if self.pyaldata_df.idx_trial_end.values[-1] != number_of_bins:
-            warnings.warn(
+            logger.warning(
                 f"Extract number of bins: {self.pyaldata_df.idx_trial_end.values[-1]} does not match calculated "
                 f"number of bins: {number_of_bins} "
             )
@@ -824,8 +805,15 @@ def run_pyaldata_conversion(
             f"NWB file: {session_path.name}.nwb not found. Running .nwb conversion"
         )
         run_nwb_conversion(session_path, kilosort_flag, custom_map)  # Creates .nwb file
+        nwbfile_path = session_path / f"{session_path.name}.nwb"
+
+
     elif len(nwbfile_path) > 1:
         raise ValueError("Too many nwb files in session folder")
+    
+    else:
+        nwbfile_path = nwbfile_path[0]
+        assert nwbfile_path.exists()
 
     # Parse nwb data
     parsed_nwbfile = ParsedNWBFile(nwbfile_path)
