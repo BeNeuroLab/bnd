@@ -167,25 +167,26 @@ def up(
 
 
 @app.command()
-def down(
+def dl(
     session_name: str = typer.Argument(help="Name of session: M123_2000_02_03_14_15"),
     max_size_MB: float = typer.Option(
         0,
         "--max-size",
-        help="Maximum size in MB. Any File smaller will be downloaded. Zero mean infinite size.",
+        help="Maximum size in MB. Any smaller file will be downloaded. Zero mean infinite size.",
     ),
     do_video: bool = typer.Option(
         False,
         "--video/--no-video",
         "-v/-V",
-        help="Download video files as well, if they are smaller than `--max-size`.",
+        help="Download video files as well, if they are smaller than `--max-size`. No video files by default.",
     ),
 ):
     """
     Download experimental data from a given session from the remote server.
 
     Example usage to download everything:
-        `bnd down M017_2024_03_12_18_45 -v` will download everything
+        `bnd down M017_2024_03_12_18_45 -v` will download everything, including videos
+        `bnd down M017_2024_03_12_18_45` will download everything, except videos
         `bnd down M017_2024_03_12_18_45 --max-size=50` will download files smaller than 50MB
     """
     download_session(session_name, max_size_MB, do_video)
