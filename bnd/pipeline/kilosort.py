@@ -4,11 +4,10 @@ import torch
 from kilosort import run_kilosort
 from kilosort.utils import PROBE_DIR, download_probes
 
-from bnd import set_logging
 from bnd.config import Config, _load_config
+from bnd import set_logging
 
 logger = set_logging(__name__)
-
 
 def _read_probe_type(meta_file_path: str) -> str:
     with open(meta_file_path, "r") as meta_file:
@@ -142,14 +141,13 @@ def run_kilosort_on_session(session_path: Path) -> None:
     if isinstance(session_path, str):
         session_path = Path(session_path)
 
-    ephys_recording_folders = config.get_subdirectories_from_pattern(session_path, "*_g?")
     kilosort_output_folders = config.get_subdirectories_from_pattern(
         session_path, "*_ksort"
     )
 
-    if not ephys_recording_folders:
+    if not any(session_path.rglob("*.bin")):
         logger.warning(
-            f"No ephys folders found. Consider running `bnd dl {session_path.name} -e"
+            f"No ephys files found. Consider running `bnd dl {session_path.name} -e"
         )
 
     elif kilosort_output_folders:
