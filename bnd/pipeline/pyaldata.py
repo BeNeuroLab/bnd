@@ -123,7 +123,7 @@ def _parse_pynwb_probe(
 
     brain_area_spikes_and_chan_best = {}
     if no_pinpoint_channel_map:
-        brain_areas = {"all"}
+        brain_areas = {f"all_{probe_units.name.split('_')[-1]}"}
     else:
         brain_areas = {
             value for value in probe_channel_map.values() if value not in ["out", "void"]
@@ -307,7 +307,6 @@ class ParsedNWBFile:
             self.pyaldata_df = None
 
         logger.info("Parsed NWB file")
-
 
     def try_to_parse_processing_module(self, processing_key: str) -> None:
         """
@@ -806,10 +805,9 @@ def run_pyaldata_conversion(
         run_nwb_conversion(session_path, kilosort_flag, custom_map)  # Creates .nwb file
         nwbfile_path = session_path / f"{session_path.name}.nwb"
 
-
     elif len(nwbfile_path) > 1:
         raise ValueError("Too many nwb files in session folder")
-    
+
     else:
         nwbfile_path = nwbfile_path[0]
         assert nwbfile_path.exists()
@@ -821,6 +819,7 @@ def run_pyaldata_conversion(
     parsed_nwbfile.run_conversion()
 
     # Save in raw
+    breakpoint()
     parsed_nwbfile.save_to_mat()
 
     return
