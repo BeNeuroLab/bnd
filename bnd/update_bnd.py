@@ -32,7 +32,7 @@ def _run_git_command(repo_path: Path, command: list[str]) -> str:
 
     if not (repo_path / ".git").exists():
         raise ValueError(f"{repo_path} is not a git repository")
-    breakpoint()
+
     result = subprocess.run(
         ["git", "-C", repo_path.absolute()] + command, capture_output=True, text=True
     )
