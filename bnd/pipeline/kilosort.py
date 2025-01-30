@@ -17,7 +17,7 @@ def _read_probe_type(meta_file_path: str) -> str:
                 break
 
         if int(value) == 0:
-            probe_type = "neuropixPhase3B1_kilosortChanMap.mat"
+            probe_type = "neuropixPhase3B1_kilosortChanMap.mat"  # Neuropixels Phase3B1 (staggered)
         elif int(value) == 21:
             probe_type = "NP2_kilosortChanMap.mat"
         else:

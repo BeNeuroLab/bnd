@@ -160,7 +160,9 @@ def up(
         upload_session(session_or_animal_name)
     elif len(session_or_animal_name) == 4:  # animal name
         config = _load_config()
-        last_session = get_last_session(config.LOCAL_PATH / "raw" / session_or_animal_name)
+        last_session = get_last_session(
+            config.LOCAL_PATH / "raw" / session_or_animal_name
+        )
         upload_session(last_session)
     else:
         raise ValueError("Input must be either a session or an animal name.")
@@ -262,7 +264,9 @@ def init():
         _check_is_git_track(repo_path)
 
         local_path = Path(
-            typer.prompt("Enter the absolute path to the root of the local data storage")
+            typer.prompt(
+                "Enter the absolute path to the root of the local data storage"
+            )
         )
         _check_root(local_path)
 

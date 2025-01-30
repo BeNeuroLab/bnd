@@ -821,7 +821,6 @@ def run_pyaldata_conversion(
     parsed_nwbfile.run_conversion()
 
     # Save in raw
-    breakpoint()
     parsed_nwbfile.save_to_mat()
 
     return

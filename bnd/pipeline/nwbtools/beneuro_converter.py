@@ -7,6 +7,7 @@ from neuroconv.datainterfaces import SpikeGLXRecordingInterface  # PhySortingInt
 from neuroconv.tools.signal_processing import get_rising_frames_from_ttl
 
 from bnd import set_logging
+from bnd.config import _load_config
 from bnd.pipeline.nwbtools.anipose_interface import AniposeInterface
 from bnd.pipeline.nwbtools.multiprobe_kilosort_interface import (
     MultiProbeKiloSortInterface,
@@ -14,6 +15,7 @@ from bnd.pipeline.nwbtools.multiprobe_kilosort_interface import (
 from bnd.pipeline.nwbtools.pycontrol_interface import PyControlInterface
 
 logger = set_logging(__name__)
+config = _load_config()
 
 
 def chunked_first_rise(memmap_array: np.memmap, chunk_size: int = 1_000):
@@ -104,6 +106,13 @@ class BeNeuroConverter(NWBConverter):
             raw_session_path = Path(
                 self.data_interface_objects["PyControl"].source_data["file_path"]
             )
+            spikeglx_output_folder_path = config.get_subdirectories_from_pattern(
+                raw_session_path, "*_g?"
+            )
+            if len(spikeglx_output_folder_path) > 1:
+                raise ValueError(f"Too many recordings")
+
+            spikeglx_output_folder_path = spikeglx_output_folder_path[0]
 
             for probe_name, kilosort_interface in zip(
                 multikilo.probe_names, multikilo.kilosort_interfaces
@@ -114,8 +123,11 @@ class BeNeuroConverter(NWBConverter):
                 # this is needed for the alignment to work
                 # it doesn't need the sync channel inside here, I'll extract that later
                 kilosort_interface.register_recording(
-                    # SpikeGLXRecordingInterfaceWithSyncChannel(ap_paths[0])
-                    SpikeGLXRecordingInterface(ap_paths[0])
+                    # SpikeGLXRecordingInterface(ap_paths[0]),
+                    SpikeGLXRecordingInterface(
+                        folder_path=spikeglx_output_folder_path,
+                        stream_id=f"{probe_name}.ap",
+                    )
                 )
 
                 # this is used to get the sync channel's values
@@ -125,12 +137,6 @@ class BeNeuroConverter(NWBConverter):
                     stream_name=f"{probe_name}.ap",
                     load_sync_channel=True,
                 )
-
-                # Find the first rising edge in the sync channel
-                # by reading the whole channel into memory
-                # last_channel = np.array(rec_with_sync_channel.get_traces()[1:, -1])
-                # rising_frames = get_rising_frames_from_ttl(last_channel)
-                # first_rise_seconds = rising_frames[0] / rec_with_sync_channel.sampling_frequency
 
                 # Find the first rising edge without having to read the
                 # whole array first, which can be time consuming in my experience

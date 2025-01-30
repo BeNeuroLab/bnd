@@ -22,7 +22,7 @@ def _try_adding_kilosort_to_source_data(source_data: dict, session_path: Path) -
         # then try loading it
         try:
             # TODO: Add custom map options
-            MultiProbeKiloSortInterface(session_path)
+            MultiProbeKiloSortInterface(str(session_path))
         # warn if we can't read it
         except Exception as e:
             logger.warning(f"Problem loading Kilosort data: {str(e)}")
