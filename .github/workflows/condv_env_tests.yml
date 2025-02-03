@@ -3,7 +3,7 @@
 
 name: Cross-Platform Conda Environment Setup
 
-on: [pull_request, push]
+on: pull_request
 
 jobs:
   build:
@@ -37,7 +37,7 @@ jobs:
       - name: Activate and run tests
         shell: bash -l {0}
         run: |
-          conda activate bnd-dev
+          conda activate bnd
           pytest
 
 
