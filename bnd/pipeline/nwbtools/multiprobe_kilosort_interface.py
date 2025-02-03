@@ -14,7 +14,6 @@ import probeinterface as pi
 from neuroconv.datainterfaces import KiloSortSortingInterface
 from neuroconv.tools.spikeinterface import add_sorting_to_nwbfile
 from neuroconv.utils import DeepDict
-from pydantic import DirectoryPath
 from pynwb import NWBFile
 
 from bnd import set_logging
@@ -190,7 +189,7 @@ class MultiProbeKiloSortInterface(KiloSortSortingInterface):
 
     def __init__(
         self,
-        folder_path: DirectoryPath,
+        ksorted_folder_path: Path,
         keep_good_only: bool = False,
         verbose: bool = False,
     ):
@@ -198,24 +197,28 @@ class MultiProbeKiloSortInterface(KiloSortSortingInterface):
 
         Parameters
         ----------
-        folder_path : Path
-            path to session
+        ksorted_folder_path : Path
+            path to ksort output from recording of interest
         keep_good_only : bool, optional
             keep or not only units labelled as `good`, by default False
         verbose : bool, optional
             verbosity level, by default False
         """
-        self.kilosort_folder_paths = list(Path(folder_path).glob("**/sorter_output"))
+        self.session_path = ksorted_folder_path.parent.parent
+        self.recording_to_wrap = ksorted_folder_path.name[-2:]  # g0 or g1
+        self.sorter_output_paths = list(Path(ksorted_folder_path).glob("*/sorter_output"))
+
+        if not len(self.sorter_output_paths):
+            raise ValueError("Selected recording does not have kilosort output")
+
         self.probe_names = [
-            ks_path.parent.name.split("_")[-1] for ks_path in self.kilosort_folder_paths
+            ks_path.parent.name.split("_")[-1] for ks_path in self.sorter_output_paths
         ]
 
         self.kilosort_interfaces = [
             KiloSortSortingInterface(folder_path, keep_good_only, verbose)
-            for folder_path in self.kilosort_folder_paths
+            for folder_path in self.sorter_output_paths
         ]
-
-        self.folder_path = Path(folder_path)
 
     def set_aligned_starting_time(self, aligned_starting_time: float):
         for kilosort_interface in self.kilosort_interfaces:
@@ -241,15 +244,17 @@ class MultiProbeKiloSortInterface(KiloSortSortingInterface):
         None
         """
 
-        raw_recording_path = Path(str(self.folder_path).replace("processed", "raw"))
+        raw_recording_path = (
+            self.session_path / f"{self.session_path.name}_{self.recording_to_wrap}"
+        )
         meta_filepaths = list(raw_recording_path.rglob("*/*ap.meta"))
 
         # Try loading trajectory information from pinpoint
-        pinpoint_trajectory_dict = _try_loading_trajectory_file(raw_recording_path)
+        pinpoint_trajectory_dict = _try_loading_trajectory_file(self.session_path)
 
         # If pinpoint_trajectories is available, load channel map
         channel_map_dict = (
-            _create_channel_map(pinpoint_trajectory_dict, raw_recording_path)
+            _create_channel_map(pinpoint_trajectory_dict, self.session_path)
             if pinpoint_trajectory_dict is not None
             else None
         )
@@ -316,7 +321,7 @@ class MultiProbeKiloSortInterface(KiloSortSortingInterface):
         # Kilosort output will be saved in processing and not units
         # units is reserved for the units curated by Phy
         for probe_name, kilosort_interface, kilosort_folder_path in zip(
-            self.probe_names, self.kilosort_interfaces, self.kilosort_folder_paths
+            self.probe_names, self.kilosort_interfaces, self.sorter_output_paths
         ):
             # Load templates
             templates = np.load(kilosort_folder_path / "templates.npy")

@@ -899,9 +899,7 @@ def run_pyaldata_conversion(
     # Get nwb file
     nwbfile_path = config.get_subdirectories_from_pattern(session_path, "*.nwb")
     if not nwbfile_path:
-        logger.warning(
-            f"NWB file: {session_path.name}.nwb not found. Running .nwb conversion"
-        )
+        logger.warning(f"NWB file: {session_path.name}.nwb not found")
         run_nwb_conversion(session_path, kilosort_flag, custom_map)  # Creates .nwb file
         nwbfile_path = session_path / f"{session_path.name}.nwb"
 

@@ -84,7 +84,12 @@ class BeNeuroConverter(NWBConverter):
         "PyControl": PyControlInterface,
         "Anipose": AniposeInterface,
     }
-    logger.info("Extracted available interfaces")
+
+    def __init__(self, source_data, recording_to_process=None, verbose=True):
+        super().__init__(source_data, verbose)
+        self.recording_to_process = recording_to_process
+
+    # logger.info("Extracted available interfaces")
 
     def temporally_align_data_interfaces(self):
         adjusting_times = {}
@@ -109,10 +114,14 @@ class BeNeuroConverter(NWBConverter):
             spikeglx_output_folder_path = config.get_subdirectories_from_pattern(
                 raw_session_path, "*_g?"
             )
-            if len(spikeglx_output_folder_path) > 1:
-                raise ValueError(f"Too many recordings")
 
-            spikeglx_output_folder_path = spikeglx_output_folder_path[0]
+            if len(spikeglx_output_folder_path) > 1:
+                assert self.recording_to_process is not None
+                spikeglx_output_folder_path = spikeglx_output_folder_path[
+                    self.recording_to_process
+                ]
+            elif len(spikeglx_output_folder_path) == 1:
+                spikeglx_output_folder_path = spikeglx_output_folder_path[0]
 
             for probe_name, kilosort_interface in zip(
                 multikilo.probe_names, multikilo.kilosort_interfaces
@@ -122,10 +131,11 @@ class BeNeuroConverter(NWBConverter):
 
                 # this is needed for the alignment to work
                 # it doesn't need the sync channel inside here, I'll extract that later
+
                 kilosort_interface.register_recording(
                     # SpikeGLXRecordingInterface(ap_paths[0]),
                     SpikeGLXRecordingInterface(
-                        folder_path=spikeglx_output_folder_path,
+                        folder_path=str(spikeglx_output_folder_path),
                         stream_id=f"{probe_name}.ap",
                     )
                 )

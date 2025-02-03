@@ -1,11 +1,13 @@
 import os
 from pathlib import Path
 
+import numpy as np
 from rich import print
 
 from bnd import set_logging
 from bnd.config import _load_config
 from bnd.pipeline.kilosort import run_kilosort_on_session
+from bnd.pipeline.nwbtools.anipose_interface import AniposeInterface
 from bnd.pipeline.nwbtools.beneuro_converter import BeNeuroConverter
 from bnd.pipeline.nwbtools.multiprobe_kilosort_interface import (
     MultiProbeKiloSortInterface,
@@ -16,23 +18,40 @@ config = _load_config()
 
 
 def _try_adding_kilosort_to_source_data(source_data: dict, session_path: Path) -> None:
-    if any(session_path.glob("**/spike_times.npy")):
-        # TODO: Check you only run it on one recording
-        # if it looks like kilosort has been run
-        # then try loading it
+    if any(session_path.glob("**/spike_times.npy")) and any(
+        config.get_subdirectories_from_pattern(session_path, "*_ksort")
+    ):
+        # Check if there is more than one recording
+        ksorted_folders = config.get_subdirectories_from_pattern(
+            session_path / f"{session_path.name}_ksort", "*_g?"
+        )
+        if len(ksorted_folders) > 1:
+            while True:
+                user_input = input(
+                    f"Found {len(ksorted_folders)} ksorted recordings. Please select one {np.arange(len(ksorted_folders))}: "
+                )
+                try:
+                    ksorted_folder_path = ksorted_folders[int(user_input)]
+                    break
+                except Exception as e:
+                    print(f"Invalid input: {e}. Enter a valid integer")
+        elif len(ksorted_folders) == 1:
+            ksorted_folder_path = ksorted_folders[0]
+
+        # Attempt to wrap interface
         try:
             # TODO: Add custom map options
-            MultiProbeKiloSortInterface(str(session_path))
+            MultiProbeKiloSortInterface(ksorted_folder_path)
+            source_data.update(
+                Kilosort={
+                    "ksorted_folder_path": ksorted_folder_path,  # For neuroconv consistency
+                }
+            )
+            return int(user_input) if len(ksorted_folders) > 1 else None
+
         # warn if we can't read it
         except Exception as e:
             logger.warning(f"Problem loading Kilosort data: {str(e)}")
-        # if we can, then add it to the conversion
-        else:
-            source_data.update(
-                Kilosort={
-                    "folder_path": str(session_path),  # For neuroconv consistency
-                }
-            )
 
     elif len(config.get_subdirectories_from_pattern(session_path, "*_g?")) > 0:
         # if there's no kilosort output found,
@@ -42,6 +61,7 @@ def _try_adding_kilosort_to_source_data(source_data: dict, session_path: Path) -
         )
     else:
         logger.warning("No ephys or kilosort data found")
+
     return
 
 
@@ -72,6 +92,8 @@ def _try_adding_anipose_to_source_data(source_data: dict, session_path: Path):
 
 
 def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool):
+    logger.info(f"Running nwb conversion on session: {session_path.name}")
+
     # TODO: Throw question on which recording to use if it finds many
     config = _load_config()
 
@@ -106,11 +128,11 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
         },
     )
 
-    _try_adding_kilosort_to_source_data(source_data, session_path)
+    recording_to_process = _try_adding_kilosort_to_source_data(source_data, session_path)
     _try_adding_anipose_to_source_data(source_data, session_path)
 
     # finally, run the conversion
-    converter = BeNeuroConverter(source_data, verbose=False)
+    converter = BeNeuroConverter(source_data, recording_to_process, verbose=False)
 
     metadata = converter.get_metadata()
 
