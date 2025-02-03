@@ -23,6 +23,19 @@ logger = set_logging(__name__)
 
 
 def _create_probe_dataframe(probe_config):
+    """
+    Creates dataframes from json dict
+
+    Parameters
+    ----------
+    probe_config : dict
+        Json parsed dict with specific probe key (e.g., `imec0`W)
+
+    Returns
+    -------
+    pd.Dataframe
+        Return a dataframe for each probe
+    """
     total_channels = 384  # Channels from 0 to 383> hardcoded for NPx 1.0 for now.
     df = pd.DataFrame({"id": range(total_channels), "area_name": "all"})  # Default to 'all'
 
@@ -35,6 +48,19 @@ def _create_probe_dataframe(probe_config):
 
 
 def _parse_custom_channel_map(session_path: Path) -> dict:
+    """
+    Parse custom channel map using a .json format
+
+    Parameters
+    ----------
+    session_path : Path
+        Path to session folder
+
+    Returns
+    -------
+    dict
+        Returns dictinary of probes and brain area dataframes
+    """
 
     # Throw error and generate template if no custom_map
     if not any(session_path.glob("*custom_map.json")):
