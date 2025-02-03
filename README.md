@@ -1,6 +1,3 @@
-![Tests](https://github.com/BeNeuroLab/bnd/actions/workflows/conda_env_tests.yml/badge.svg)
-
-
 # bnd : BeNeuroLab Data Organization
 
 A **lightweigth** collection of functions for managing the experimental data recorded in the 
