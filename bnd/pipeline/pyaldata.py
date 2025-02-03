@@ -45,13 +45,15 @@ def _get_nbytes(recarray: np.recarray):
 
     return nbytes
 
+
 def _partition_array_if_too_large(recarray: np.recarray):
     nbytes = _get_nbytes(recarray=recarray)
-    partitions = np.ceil(nbytes / (2 ** 31))
+    partitions = np.ceil(nbytes / (2**31))
     if partitions == 1:
         return recarray
     else:
-        pass # TODO: Finish this
+        pass  # TODO: Finish this
+
 
 def _bin_spikes(probe_units: Units, bin_size: float) -> np.array:
     """
@@ -774,40 +776,72 @@ class ParsedNWBFile:
 
         return
 
-    def save_to_mat(self):
-        path_to_save = (
-            self.nwbfile_path.parent / f"{self.nwbfile_path.parent.name}_pyaldata.mat"
-        )
-        if path_to_save.exists():
+    def _partition_and_save_to_mat(self, path_to_save):
+
+        data_array = self.pyaldata_df.to_records(index=False)
+
+        # Check if size exceeds matlab 5 format
+        nbytes = _get_nbytes(recarray=data_array)
+        num_partitions = np.ceil(nbytes / (2**31))
+        recarray_size = len(data_array)
+
+        assert num_partitions >= 1 and num_partitions < len(data_array)  # General checks
+
+        # If size doesnt exceed, save the array
+        if num_partitions == 1:
+            # No need to split the data array
+            logger.info("Saving file...")
+            path_to_save = (
+                self.nwbfile_path.parent / f"{self.nwbfile_path.parent.name}_pyaldata.mat"
+            )
+            scipy.io.savemat(path_to_save, {"pyaldata": data_array})
+            return
+        else:
+            logger.info("Partitioning array...")
+            partition_sizes = [
+                (recarray_size // num_partitions)
+                + (1 if i < (recarray_size % num_partitions) else 0)
+                for i in range(num_partitions)
+            ]
+            # Split the recarray accordingly
+            indices = np.cumsum([0] + partition_sizes)
+            arr_partitions = [
+                data_array[indices[i] : indices[i + 1]] for i in range(num_partitions)
+            ]
+            logger.info("Saving file...")
+            for i, arr_partition in enumerate(arr_partitions):
+                path_to_save = (
+                    self.nwbfile_path.parent
+                    / f"{self.nwbfile_path.parent.name}_pyaldata_{i}.mat"
+                )
+                scipy.io.savemat(path_to_save, {"pyaldata": arr_partition})
+
+            return
+
+    def save(self):
+
+        if any(self.nwbfile_path.parent.rglob(f"*.mat")):
             # Prompt the user with an interactive menu
             while True:
                 user_input = (
-                    input(
-                        f"File '{path_to_save}' already exists. Do you want to overwrite it? (y/n): "
-                    )
+                    input(f"Mat files in directory. Do you want to overwrite them? (y/n): ")
                     .lower()
                     .strip()
                 )
                 if user_input == "y":
-                    data_array = self.pyaldata_df.to_records(index=False)
-                    breakpoint()
-                    data_array = _partition_array_if_too_large(data_array)
-                    if n
-                    logger.info("Saving file...")
-                    scipy.io.savemat(path_to_save, {"pyaldata": data_array})
+                    _partition_and_save_to_mat()
+                    logger.info(f"Session has been overwritten.")
+                    break
 
-                    logger.info(f"File '{path_to_save.name}' has been overwritten.")
-                    break
                 elif user_input == "n":
-                    logger.info(f"File '{path_to_save.name}' was not overwritten.")
+                    logger.info(f"Session was not overwritten.")
                     break
+
                 else:
                     logger.info("Please enter 'y' for yes or 'n' for no.")
         else:
-            logger.info("Saving file...")
-            data_array = self.pyaldata_df.to_records(index=False)
-            scipy.io.savemat(path_to_save, {"pyaldata": data_array})
-            logger.info(f"Saved pyaldata file in {path_to_save.name}")
+            _partition_and_save_to_mat()
+            logger.info(f"Saved pyaldata file(s) in /{self.nwbfile_path.parent.name}")
         return
 
 
@@ -858,6 +892,6 @@ def run_pyaldata_conversion(
     parsed_nwbfile.run_conversion()
 
     # Save in raw
-    parsed_nwbfile.save_to_mat()
+    parsed_nwbfile.save()
 
     return

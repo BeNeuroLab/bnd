@@ -163,6 +163,9 @@ def run_kilosort_on_session(session_path: Path) -> None:
         else:
             logger.warning("CUDA is not available. GPU computations will not be enabled.")
             return
+        ephys_recording_folders = config.get_subdirectories_from_pattern(
+            session_path, "*_g?"
+        )
         for recording_path in ephys_recording_folders:
             logger.info(f"Processing recording: {recording_path.name}")
             run_kilosort_on_recording(
