@@ -4,6 +4,7 @@ Module for conversion from nwb to pyaldata format
 
 from pathlib import Path
 
+import h5py
 import numpy as np
 import pandas as pd
 import scipy
@@ -18,6 +19,39 @@ from bnd.pipeline.nwb import run_nwb_conversion
 
 logger = set_logging(__name__)
 
+
+def _count_bytes(obj):
+    if isinstance(obj, np.ndarray):
+        return obj.nbytes
+    elif isinstance(obj, np.recarray):
+        return sum(_count_bytes(obj[field]) for field in obj.dtype.names)
+    elif isinstance(obj, np.void):
+        return sum(_count_bytes(obj[field]) for field in obj.dtype.names)
+    elif isinstance(obj, pd.DataFrame):  # Pandas DataFrame
+        return obj.memory_usage(deep=True).sum()
+    elif isinstance(obj, pd.Series):
+        return obj.memory_usage(deep=True)
+    elif isinstance(obj, dict):
+        return sum(_count_bytes(v) for v in obj.values())
+    elif isinstance(obj, (list, tuple)):
+        return sum(_count_bytes(v) for v in obj)
+    return 0
+
+
+def _get_nbytes(recarray: np.recarray):
+    nbytes = 0
+    for record in recarray:
+        nbytes = nbytes + _count_bytes(record)
+
+    return nbytes
+
+def _partition_array_if_too_large(recarray: np.recarray):
+    nbytes = _get_nbytes(recarray=recarray)
+    partitions = np.ceil(nbytes / (2 ** 31))
+    if partitions == 1:
+        return recarray
+    else:
+        pass # TODO: Finish this
 
 def _bin_spikes(probe_units: Units, bin_size: float) -> np.array:
     """
@@ -122,6 +156,7 @@ def _parse_pynwb_probe(
     no_pinpoint_channel_map = all(value == "nan" for value in probe_channel_map.values())
 
     brain_area_spikes_and_chan_best = {}
+
     if no_pinpoint_channel_map:
         brain_areas = {f"all_{probe_units.name.split('_')[-1]}"}
     else:
@@ -754,9 +789,13 @@ class ParsedNWBFile:
                     .strip()
                 )
                 if user_input == "y":
-                    logger.info("Saving file...")
                     data_array = self.pyaldata_df.to_records(index=False)
+                    breakpoint()
+                    data_array = _partition_array_if_too_large(data_array)
+                    if n
+                    logger.info("Saving file...")
                     scipy.io.savemat(path_to_save, {"pyaldata": data_array})
+
                     logger.info(f"File '{path_to_save.name}' has been overwritten.")
                     break
                 elif user_input == "n":
@@ -819,7 +858,6 @@ def run_pyaldata_conversion(
     parsed_nwbfile.run_conversion()
 
     # Save in raw
-    breakpoint()
     parsed_nwbfile.save_to_mat()
 
     return
