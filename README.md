@@ -1,4 +1,4 @@
-![Tests](https://github.com/BeNeuroLab/bnd)
+![Tests](https://github.com/BeNeuroLab/bnd/actions/workflows/conda_env_tests.yml/badge.svg)
 
 
 # bnd : BeNeuroLab Data Organization
