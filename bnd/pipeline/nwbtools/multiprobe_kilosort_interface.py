@@ -4,6 +4,7 @@ Kilosort utils during nwb conversion
 
 # TODO: Complete
 
+import json
 from copy import deepcopy
 from pathlib import Path
 from typing import Literal, Optional
@@ -21,7 +22,63 @@ from bnd import set_logging
 logger = set_logging(__name__)
 
 
-def _try_loading_trajectory_file(raw_recording_path: Path) -> dict | None:
+def _create_probe_dataframe(probe_config):
+    total_channels = 384  # Channels from 0 to 383> hardcoded for NPx 1.0 for now.
+    df = pd.DataFrame({"id": range(total_channels), "area_name": "all"})  # Default to 'all'
+
+    # Assign area names based on min-max range
+    for region, ch_range in probe_config.items():
+        # breakpoint()
+        df.loc[df["id"].isin(ch_range), "area_name"] = region
+
+    return df
+
+
+def _parse_custom_channel_map(session_path: Path) -> dict:
+
+    # Throw error and generate template if no custom_map
+    if not any(session_path.glob("*custom_map.json")):
+
+        # Create custom map template
+        custom_map_template = {
+            "imec0": {"V1": {"min": 10, "max": 50}, "M1": {"min": 50, "max": 80}},
+            "imec1": {"S1": {"min": 81, "max": 100}, "PPC": {"min": 100, "max": 150}},
+        }
+
+        # Write to a JSON file
+        with open(session_path / f"{session_path.name}_custom_map.json", "w") as f:
+            json.dump(custom_map_template, f, indent=4)
+
+        # Throw error
+        raise ValueError(
+            "Custom mapping option selected but no custom_map.json found. Fill in the generated template"
+        )
+
+    elif len(list(session_path.rglob("*custom_map.json"))) > 1:
+        raise ValueError("Too many `custom_map.json` files")
+
+    # Read custom channel maps and create dict
+    else:
+        custom_map_path = list(session_path.rglob("*custom_map.json"))[0]
+        # Load the JSON file
+        with open(custom_map_path, "r") as f:
+            config = json.load(f)
+
+        # Parse the probe data into a dict
+        probe_dict = {
+            probe: {
+                region: range(info["min"], info["max"]) for region, info in regions.items()
+            }
+            for probe, regions in config.items()
+        }
+        # Parse the probe data into a dict with dataframes
+        probes_dataframe_dict = {
+            probe: _create_probe_dataframe(regions) for probe, regions in probe_dict.items()
+        }
+        return probes_dataframe_dict
+
+
+def _try_loading_trajectory_file(session_path: Path) -> dict | None:
     """
     Load trajectory of probes from pinpoint output files. Return None if no *trajectory.txt
     file is available.
@@ -47,7 +104,7 @@ def _try_loading_trajectory_file(raw_recording_path: Path) -> dict | None:
     If a loaded probe is not called "imec0" or "imec1".
     """
 
-    pinpoint_trajectory_file = list(raw_recording_path.glob("*trajectory.txt"))
+    pinpoint_trajectory_file = list(session_path.glob("*trajectory.txt"))
     if not pinpoint_trajectory_file:
         logger.warning(
             "No trajectory file from pinpoint found. If no trajectory file is present"
@@ -190,6 +247,7 @@ class MultiProbeKiloSortInterface(KiloSortSortingInterface):
     def __init__(
         self,
         ksorted_folder_path: Path,
+        custom_map: bool = False,
         keep_good_only: bool = False,
         verbose: bool = False,
     ):
@@ -205,8 +263,9 @@ class MultiProbeKiloSortInterface(KiloSortSortingInterface):
             verbosity level, by default False
         """
         self.session_path = ksorted_folder_path.parent.parent
-        self.recording_to_wrap = ksorted_folder_path.name[-2:]  # g0 or g1
+        self.recording_to_process = ksorted_folder_path.name[-2:]  # g0 or g1
         self.sorter_output_paths = list(Path(ksorted_folder_path).glob("*/sorter_output"))
+        self.custom_map = custom_map
 
         if not len(self.sorter_output_paths):
             raise ValueError("Selected recording does not have kilosort output")
@@ -245,19 +304,26 @@ class MultiProbeKiloSortInterface(KiloSortSortingInterface):
         """
 
         raw_recording_path = (
-            self.session_path / f"{self.session_path.name}_{self.recording_to_wrap}"
+            self.session_path / f"{self.session_path.name}_{self.recording_to_process}"
         )
         meta_filepaths = list(raw_recording_path.rglob("*/*ap.meta"))
 
         # Try loading trajectory information from pinpoint
-        pinpoint_trajectory_dict = _try_loading_trajectory_file(self.session_path)
+        if self.custom_map:
+            logger.info("Using custom channel mapping")
+            pinpoint_trajectory_dict = None
+            channel_map_dict = _parse_custom_channel_map(self.session_path)
 
-        # If pinpoint_trajectories is available, load channel map
-        channel_map_dict = (
-            _create_channel_map(pinpoint_trajectory_dict, self.session_path)
-            if pinpoint_trajectory_dict is not None
-            else None
-        )
+        else:  # Default mapping
+            logger.info("Using default channel mapping")
+            pinpoint_trajectory_dict = _try_loading_trajectory_file(self.session_path)
+
+            # If pinpoint_trajectories is available, load channel map
+            channel_map_dict = (
+                _create_channel_map(pinpoint_trajectory_dict, self.session_path)
+                if pinpoint_trajectory_dict is not None
+                else None
+            )
 
         for probe_name in self.probe_names:
             # Get meta_file_path for probe_name

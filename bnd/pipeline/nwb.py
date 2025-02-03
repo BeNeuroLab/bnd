@@ -17,7 +17,9 @@ logger = set_logging(__name__)
 config = _load_config()
 
 
-def _try_adding_kilosort_to_source_data(source_data: dict, session_path: Path) -> None:
+def _try_adding_kilosort_to_source_data(
+    source_data: dict, session_path: Path, custom_map: bool
+) -> None:
     if any(session_path.glob("**/spike_times.npy")) and any(
         config.get_subdirectories_from_pattern(session_path, "*_ksort")
     ):
@@ -41,10 +43,11 @@ def _try_adding_kilosort_to_source_data(source_data: dict, session_path: Path) -
         # Attempt to wrap interface
         try:
             # TODO: Add custom map options
-            MultiProbeKiloSortInterface(ksorted_folder_path)
+            MultiProbeKiloSortInterface(ksorted_folder_path, custom_map)
             source_data.update(
                 Kilosort={
                     "ksorted_folder_path": ksorted_folder_path,  # For neuroconv consistency
+                    "custom_map": custom_map,
                 }
             )
             return int(user_input) if len(ksorted_folders) > 1 else None
@@ -128,7 +131,9 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
         },
     )
 
-    recording_to_process = _try_adding_kilosort_to_source_data(source_data, session_path)
+    recording_to_process = _try_adding_kilosort_to_source_data(
+        source_data, session_path, custom_map
+    )
     _try_adding_anipose_to_source_data(source_data, session_path)
 
     # finally, run the conversion

@@ -6,7 +6,6 @@ BeNeuro Lab, and a CLI tool called `bnd` for easy access to this functionality.
 # TODOs:
 - Finish `KilosortInterface` in nwb conversion
    - Add: custom / default mapping
-   - Make sure it can handle multiple probes
 - Finish `AniposeInterface` in nwb conversion
 - Add `bnd up` test
 
