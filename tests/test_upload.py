@@ -1,10 +1,8 @@
-import shutil
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from bnd.data_transfer import _upload_files  # Replace with your actual module name
+from bnd.data_transfer import _upload_files
 
 
 @pytest.fixture
@@ -19,13 +17,6 @@ def mock_config(tmp_path):
     remote_session_path = tmp_path / "remote_session"
     local_session_path.mkdir()
     remote_session_path.mkdir()
-
-    # Mock config methods
-    mock_config.get_local_session_path.return_value = local_session_path
-    mock_config.get_remote_session_path.return_value = remote_session_path
-    mock_config.convert_to_remote.side_effect = lambda file: remote_session_path / file.name
-    mock_config.file_name_ok.return_value = True
-
     return mock_config, local_session_path, remote_session_path
 
 

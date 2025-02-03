@@ -9,6 +9,15 @@ logger = set_logging(__name__)
 
 
 def _upload_files(pending_local_files: list, pending_remote_files: list):
+    """Uploads files and triggers assertion if they are present
+
+    Parameters
+    ----------
+    pending_local_files : list
+        local path of files to upload
+    pending_remote_files : list
+        remote path of files to upload
+    """
 
     for local_file, remote_file in zip(pending_local_files, pending_remote_files):
         assert (
