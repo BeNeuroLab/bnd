@@ -21,6 +21,19 @@ logger = set_logging(__name__)
 
 
 def _count_bytes(obj):
+    """
+    Recurrent function to call bytes of any nested variable
+
+    Parameters
+    ----------
+    obj : _type_
+        Variable on which to count bytes
+
+    Returns
+    -------
+    int
+        Total number of bytes
+    """
     if isinstance(obj, np.ndarray):
         return obj.nbytes
     elif isinstance(obj, np.recarray):
@@ -38,21 +51,25 @@ def _count_bytes(obj):
     return 0
 
 
-def _get_nbytes(recarray: np.recarray):
+def _get_nbytes_from_recarray(recarray: np.recarray):
+    """
+    Cumulative sum in a specific type of numpy object - np.recarray
+
+    Parameters
+    ----------
+    recarray : np.recarray
+        Variable on which to count bytes
+
+    Returns
+    -------
+    int
+        Total number of bytes
+    """
     nbytes = 0
     for record in recarray:
         nbytes = nbytes + _count_bytes(record)
 
     return nbytes
-
-
-def _partition_array_if_too_large(recarray: np.recarray):
-    nbytes = _get_nbytes(recarray=recarray)
-    partitions = np.ceil(nbytes / (2**31))
-    if partitions == 1:
-        return recarray
-    else:
-        pass  # TODO: Finish this
 
 
 def _bin_spikes(probe_units: Units, bin_size: float) -> np.array:
@@ -776,13 +793,15 @@ class ParsedNWBFile:
 
         return
 
-    def _partition_and_save_to_mat(self, path_to_save):
-
+    def _partition_and_save_to_mat(self):
+        """
+        Checks if data_array needs to be partitioned wrt. max matlab 5 file format and saves it
+        """
         data_array = self.pyaldata_df.to_records(index=False)
 
         # Check if size exceeds matlab 5 format
-        nbytes = _get_nbytes(recarray=data_array)
-        num_partitions = np.ceil(nbytes / (2**31))
+        nbytes = _get_nbytes_from_recarray(recarray=data_array)
+        num_partitions = int(np.ceil(nbytes / (2**31)))
         recarray_size = len(data_array)
 
         assert num_partitions >= 1 and num_partitions < len(data_array)  # General checks
@@ -797,18 +816,21 @@ class ParsedNWBFile:
             scipy.io.savemat(path_to_save, {"pyaldata": data_array})
             return
         else:
-            logger.info("Partitioning array...")
+            # Partition array
+            logger.info(f"Partitioning array into {num_partitions} chunks...")
             partition_sizes = [
                 (recarray_size // num_partitions)
                 + (1 if i < (recarray_size % num_partitions) else 0)
                 for i in range(num_partitions)
             ]
+
             # Split the recarray accordingly
             indices = np.cumsum([0] + partition_sizes)
             arr_partitions = [
                 data_array[indices[i] : indices[i + 1]] for i in range(num_partitions)
             ]
-            logger.info("Saving file...")
+
+            logger.info("Saving file(s)...")
             for i, arr_partition in enumerate(arr_partitions):
                 path_to_save = (
                     self.nwbfile_path.parent
@@ -819,29 +841,34 @@ class ParsedNWBFile:
             return
 
     def save(self):
+        """
+        Main saving routine
+        """
 
         if any(self.nwbfile_path.parent.rglob(f"*.mat")):
             # Prompt the user with an interactive menu
             while True:
                 user_input = (
-                    input(f"Mat files in directory. Do you want to overwrite them? (y/n): ")
+                    input("Mat files in directory. Do you want to overwrite them? (y/n): ")
                     .lower()
                     .strip()
                 )
                 if user_input == "y":
-                    _partition_and_save_to_mat()
-                    logger.info(f"Session has been overwritten.")
+                    self._partition_and_save_to_mat()
+                    logger.info("Session has been overwritten.")
                     break
 
                 elif user_input == "n":
-                    logger.info(f"Session was not overwritten.")
+                    logger.info("Session was not overwritten.")
                     break
 
                 else:
                     logger.info("Please enter 'y' for yes or 'n' for no.")
         else:
-            _partition_and_save_to_mat()
-            logger.info(f"Saved pyaldata file(s) in /{self.nwbfile_path.parent.name}")
+            self._partition_and_save_to_mat()
+            logger.info(
+                f"Saved pyaldata file(s) in {self.nwbfile_path.parent.name} session"
+            )
         return
 
 

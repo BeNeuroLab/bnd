@@ -32,4 +32,4 @@ jobs:
       - name: Create and activate Conda environment and install dependencies
         shell: bash -l {0}
         run: |
-          conda env create --file=./env.yml
+          conda env create --file=./processing_env.yml
