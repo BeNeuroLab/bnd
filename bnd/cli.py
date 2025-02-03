@@ -151,6 +151,7 @@ def up(
     Upload data to the server. If the file exists on the server, it won't be replaced.
     Every file in the session folder will get uploaded.
 
+    \b
     Example usage to upload everything of a given session:
         `bnd up M017_2024_03_12_18_45`
     Upload everything of the last session:
@@ -160,9 +161,7 @@ def up(
         upload_session(session_or_animal_name)
     elif len(session_or_animal_name) == 4:  # animal name
         config = _load_config()
-        last_session = get_last_session(
-            config.LOCAL_PATH / "raw" / session_or_animal_name
-        )
+        last_session = get_last_session(config.LOCAL_PATH / "raw" / session_or_animal_name)
         upload_session(last_session)
     else:
         raise ValueError("Input must be either a session or an animal name.")
@@ -186,10 +185,11 @@ def dl(
     """
     Download experimental data from a given session from the remote server.
 
+    \b
     Example usage to download everything:
-        `bnd down M017_2024_03_12_18_45 -v` will download everything, including videos
-        `bnd down M017_2024_03_12_18_45` will download everything, except videos
-        `bnd down M017_2024_03_12_18_45 --max-size=50` will download files smaller than 50MB
+        `bnd dl M017_2024_03_12_18_45 -v` will download everything, including videos
+        `bnd dl M017_2024_03_12_18_45` will download everything, except videos
+        `bnd dl M017_2024_03_12_18_45 --max-size=50` will download files smaller than 50MB
     """
     download_session(session_name, max_size_MB, do_video)
 
@@ -264,9 +264,7 @@ def init():
         _check_is_git_track(repo_path)
 
         local_path = Path(
-            typer.prompt(
-                "Enter the absolute path to the root of the local data storage"
-            )
+            typer.prompt("Enter the absolute path to the root of the local data storage")
         )
         _check_root(local_path)
 
