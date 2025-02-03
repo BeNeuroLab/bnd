@@ -8,6 +8,19 @@ from bnd.config import _load_config
 logger = set_logging(__name__)
 
 
+def _upload_files(pending_local_files: list, pending_remote_files: list):
+
+    for local_file, remote_file in zip(pending_local_files, pending_remote_files):
+        assert (
+            not remote_file.exists()
+        ), "Remote file already exists. This should not happen."
+
+        # Ensure the destination directory exists
+        remote_file.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(local_file, remote_file)
+        logger.info(f'Uploaded "{local_file.name}"')
+
+
 def upload_session(session_name: str) -> None:
     """
     Upload a session to the server.
@@ -20,9 +33,11 @@ def upload_session(session_name: str) -> None:
 
     local_files = list(local_session_path.rglob("*"))
     remote_files = list(remote_session_path.rglob("*"))
+
     assert isinstance(
         remote_files, list
     ), "`remote_files` must be a list, otherwise the list comprehension below will break"
+
     pending_local_files = [
         file
         for file in local_files
@@ -43,15 +58,10 @@ def upload_session(session_name: str) -> None:
         return
 
     # Upload the files
-    for file in pending_local_files:
-        remote_file = config.convert_to_remote(file)
-        assert (
-            not remote_file.exists()
-        ), "Remote file already exists. This should not happen."
-        # Ensure the destination directory exists
-        remote_file.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(file, remote_file)
-        logger.info(f'Uploaded "{file.name}"')
+    pending_remote_files = [config.convert_to_remote(file) for file in pending_local_files]
+    _upload_files(
+        pending_local_files=pending_local_files, pending_remote_files=pending_remote_files
+    )
 
     logger.info("Upload complete.")
 

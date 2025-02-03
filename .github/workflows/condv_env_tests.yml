@@ -3,7 +3,7 @@
 
 name: Cross-Platform Conda Environment Setup
 
-on: pull_request
+on: pull_request, push
 
 jobs:
   build:
@@ -29,7 +29,15 @@ jobs:
           conda init bash
           source ~/.bashrc
 
-      - name: Create and activate Conda environment and install dependencies
+      - name: Create environment and install dependencies
         shell: bash -l {0}
         run: |
           conda env create --file=./env.yml
+
+      - name: Activate and run tests
+        shell: bash -l {0}
+        run: |
+          conda activate bnd-dev
+          pytest
+
+
