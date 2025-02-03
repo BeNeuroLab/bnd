@@ -1,3 +1,6 @@
+![Tests](https://github.com/BeNeuroLab/bnd)
+
+
 # bnd : BeNeuroLab Data Organization
 
 A **lightweigth** collection of functions for managing the experimental data recorded in the 
