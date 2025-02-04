@@ -1,11 +1,31 @@
 """This module contains functions for uploading and downloading data to and from the server."""
 
 import shutil
+from pathlib import Path
 
 from bnd import set_logging
 from bnd.config import _load_config
 
 logger = set_logging(__name__)
+
+def _upload_file(local_file: Path, remote_file: Path):
+    """Uploads a file and triggers assertion if they already exist
+
+    Parameters
+    ----------
+    local_file: Path
+        local path of the file to upload
+    remote_file: Path
+        remote path of the file to upload
+    """
+
+    assert not remote_file.exists(), \
+        "Remote file already exists. This should not happen."
+
+    # Ensure the destination directory exists
+    remote_file.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(local_file, remote_file)
+    logger.info(f'Uploaded "{local_file.name}"')
 
 
 def upload_session(session_name: str) -> None:
@@ -20,13 +40,13 @@ def upload_session(session_name: str) -> None:
 
     local_files = list(local_session_path.rglob("*"))
     remote_files = list(remote_session_path.rglob("*"))
-    assert isinstance(
-        remote_files, list
-    ), "`remote_files` must be a list, otherwise the list comprehension below will break"
+    assert isinstance(remote_files, list), \
+        "`remote_files` must be a list, otherwise the list comprehension below will break"
     pending_local_files = [
         file
         for file in local_files
-        if config.convert_to_remote(file) not in remote_files and file.is_file()
+        if config.convert_to_remote(file) not in remote_files 
+        and file.is_file()
     ]
     if not pending_local_files:
         logger.info(f"No files to upload.")
@@ -46,11 +66,9 @@ def upload_session(session_name: str) -> None:
     for file in pending_local_files:
         remote_file = config.convert_to_remote(file)
         assert not remote_file.exists(), \
-            "Remote file already exists. This should not happen."
-        # Ensure the destination directory exists
-        remote_file.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(file, remote_file)
-        logger.info(f'Uploaded "{file.name}"')
+            "Remote file exists. This should never happen."
+
+        _upload_file(local_file=file, remote_file=remote_file)
 
     logger.info("Upload complete.")
 
