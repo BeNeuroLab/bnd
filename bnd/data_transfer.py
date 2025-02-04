@@ -8,28 +8,6 @@ from bnd.config import _load_config
 logger = set_logging(__name__)
 
 
-def _upload_files(pending_local_files: list, pending_remote_files: list):
-    """Uploads files and triggers assertion if they are present
-
-    Parameters
-    ----------
-    pending_local_files : list
-        local path of files to upload
-    pending_remote_files : list
-        remote path of files to upload
-    """
-
-    for local_file, remote_file in zip(pending_local_files, pending_remote_files):
-        assert (
-            not remote_file.exists()
-        ), "Remote file already exists. This should not happen."
-
-        # Ensure the destination directory exists
-        remote_file.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(local_file, remote_file)
-        logger.info(f'Uploaded "{local_file.name}"')
-
-
 def upload_session(session_name: str) -> None:
     """
     Upload a session to the server.
@@ -42,11 +20,9 @@ def upload_session(session_name: str) -> None:
 
     local_files = list(local_session_path.rglob("*"))
     remote_files = list(remote_session_path.rglob("*"))
-
     assert isinstance(
         remote_files, list
     ), "`remote_files` must be a list, otherwise the list comprehension below will break"
-
     pending_local_files = [
         file
         for file in local_files
@@ -67,10 +43,14 @@ def upload_session(session_name: str) -> None:
         return
 
     # Upload the files
-    pending_remote_files = [config.convert_to_remote(file) for file in pending_local_files]
-    _upload_files(
-        pending_local_files=pending_local_files, pending_remote_files=pending_remote_files
-    )
+    for file in pending_local_files:
+        remote_file = config.convert_to_remote(file)
+        assert not remote_file.exists(), \
+            "Remote file already exists. This should not happen."
+        # Ensure the destination directory exists
+        remote_file.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(file, remote_file)
+        logger.info(f'Uploaded "{file.name}"')
 
     logger.info("Upload complete.")
 
@@ -102,9 +82,8 @@ def download_session(session_name: str, max_size_MB: float, do_video: bool) -> N
 
         if file.stat().st_size < max_size:
             local_file = config.convert_to_local(file)
-            assert (
-                not local_file.exists()
-            ), "Local file already exists. This should not happen."
+            assert not local_file.exists(), \
+                "Local file already exists. This should not happen."
             # Ensure the destination directory exists
             local_file.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(file, local_file)
