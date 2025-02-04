@@ -108,4 +108,5 @@ def download_session(session_name: str, max_size_MB: float, do_video: bool) -> N
             logger.info(f'Downloaded "{file.name}"')
         else:
             logger.warning(f'"{file.name}" is too large. Skipping.')
+
     logger.info("Download complete.")
