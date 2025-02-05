@@ -104,8 +104,6 @@ def update_bnd(print_new_commits: bool = True) -> None:
     if len(new_commits) > 0:
         print("New commits found, pulling changes...")
 
-        print(1 * "\n")
-
         _run_git_command(config.REPO_PATH, ["pull", "origin", "main"])
 
         print(1 * "\n")
