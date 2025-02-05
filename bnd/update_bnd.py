@@ -88,40 +88,6 @@ def check_for_updates() -> bool:
     print("No new commits found, package is up to date.")
 
 
-def get_file_hash(branch, file_path):
-    """Get the hash of a file from a specific Git branch."""
-    config = _load_config()
-    try:
-        result = subprocess.run(
-            ["git", "-C", config.REPO_PATH, "ls-tree", branch, file_path],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        return result.stdout.split()[2] if result.stdout else None
-    except subprocess.CalledProcessError:
-        return None
-
-
-def _remote_file_changed(file_path: Path, remote_branch) -> bool:
-    """Check if the file has changed remotely."""
-
-    # Get file hashes
-    local_hash = get_file_hash("HEAD", str(file_path))
-    remote_hash = get_file_hash(remote_branch, str(file_path))
-
-    if local_hash and remote_hash:
-        if local_hash != remote_hash:
-            print(f"File {file_path.name} has changed remotely.")
-            return True
-        else:
-            print(f"No remote changes detected in {file_path.name}.")
-            return False
-    else:
-        warnings.warn(f"Could not retrieve hash for {file_path.name}.")
-        return False
-
-
 def update_bnd(print_new_commits: bool = True) -> None:
     """
     Update bnd if it was installed with conda
@@ -140,38 +106,7 @@ def update_bnd(print_new_commits: bool = True) -> None:
 
         print(1 * "\n")
 
-        if _remote_file_changed(
-            file_path=config.REPO_PATH / "env.yml",
-            remote_branch="origin/main",
-        ):
-            _run_git_command(config.REPO_PATH, ["pull", "origin", "main"])
-            # Update the environment
-            if platform.system().lower() == "windows":
-                subprocess.run(
-                    [
-                        "conda",
-                        "env",
-                        "update",
-                        f"--file={(config.REPO_PATH / 'env.yml')}",
-                        "--prune",
-                        "--quiet",
-                    ],
-                    shell=True,
-                )
-            else:
-                subprocess.run(
-                    [
-                        "conda",
-                        "env",
-                        "update",
-                        "-f",
-                        f"--file={(config.REPO_PATH / 'env.yml')}",
-                        "--prune",
-                        "--quiet",
-                    ]
-                )
-        else:
-            _run_git_command(config.REPO_PATH, ["pull", "origin", "main"])
+        _run_git_command(config.REPO_PATH, ["pull", "origin", "main"])
 
         print(1 * "\n")
         print("Package updated successfully.")
