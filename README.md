@@ -26,7 +26,7 @@ BeNeuro Lab, and a CLI tool called `bnd` for easy access to this functionality.
 
    If you installed the base environment and want to update later on:
    ```shell
-   conda env update -n bnd --file=processing_env.yml
+   conda env --file=processing_env.yml
    ```
 4. Create your configuration file:
    ```shell

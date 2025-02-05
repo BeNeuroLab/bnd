@@ -290,16 +290,16 @@ class MultiProbeKiloSortInterface(KiloSortSortingInterface):
         """
         self.session_path = ksorted_folder_path.parent.parent
         self.recording_to_process = ksorted_folder_path.name[-2:]  # g0 or g1
-        self.sorter_output_paths = list(Path(ksorted_folder_path).glob("*/sorter_output"))
+        outputs_paths = list(Path(ksorted_folder_path).glob("*/spike_times.npy"))
+        self.sorter_output_paths = [path.parent for path in outputs_paths]
         self.custom_map = custom_map
 
         if not len(self.sorter_output_paths):
             raise ValueError("Selected recording does not have kilosort output")
 
         self.probe_names = [
-            ks_path.parent.name.split("_")[-1] for ks_path in self.sorter_output_paths
+            ks_path.name.split("_")[-1] for ks_path in self.sorter_output_paths
         ]
-
         self.kilosort_interfaces = [
             KiloSortSortingInterface(folder_path, keep_good_only, verbose)
             for folder_path in self.sorter_output_paths

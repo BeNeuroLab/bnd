@@ -24,8 +24,10 @@ def _try_adding_kilosort_to_source_data(
         config.get_subdirectories_from_pattern(session_path, "*_ksort")
     ):
         # Check if there is more than one recording
-        ksorted_folders = config.get_subdirectories_from_pattern(
-            session_path / f"{session_path.name}_ksort", "*_g?"
+        ksorted_folders = sorted(
+            config.get_subdirectories_from_pattern(
+                session_path / f"{session_path.name}_ksort", "*_g?"
+            )
         )
         if len(ksorted_folders) > 1:
             while True:
