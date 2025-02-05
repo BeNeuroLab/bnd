@@ -141,7 +141,7 @@ def update_bnd(print_new_commits: bool = True) -> None:
         print(1 * "\n")
 
         if _remote_file_changed(
-            file_path=config.REPO_PATH / "environment.yml",
+            file_path=config.REPO_PATH / "env.yml",
             remote_branch="origin/main",
         ):
             _run_git_command(config.REPO_PATH, ["pull", "origin", "main"])
