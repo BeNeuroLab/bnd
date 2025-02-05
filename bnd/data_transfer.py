@@ -8,6 +8,7 @@ from bnd.config import _load_config
 
 logger = set_logging(__name__)
 
+
 def _upload_file(local_file: Path, remote_file: Path):
     """Uploads a file and triggers assertion if they already exist
 
@@ -19,8 +20,7 @@ def _upload_file(local_file: Path, remote_file: Path):
         remote path of the file to upload
     """
 
-    assert not remote_file.exists(), \
-        "Remote file already exists. This should not happen."
+    assert not remote_file.exists(), "Remote file already exists. This should not happen."
 
     # Ensure the destination directory exists
     remote_file.parent.mkdir(parents=True, exist_ok=True)
@@ -40,8 +40,9 @@ def upload_session(session_name: str) -> None:
 
     local_files = list(local_session_path.rglob("*"))
     remote_files = list(remote_session_path.rglob("*"))
-    assert isinstance(remote_files, list), \
-        "`remote_files` must be a list, otherwise the list comprehension below will break"
+    assert isinstance(
+        remote_files, list
+    ), "`remote_files` must be a list, otherwise the list comprehension below will break"
     pending_local_files = [
         file
         for file in local_files
@@ -65,8 +66,7 @@ def upload_session(session_name: str) -> None:
     # Upload the files
     for file in pending_local_files:
         remote_file = config.convert_to_remote(file)
-        assert not remote_file.exists(), \
-            "Remote file exists. This should never happen."
+        assert not remote_file.exists(), "Remote file exists. This should never happen."
 
         _upload_file(local_file=file, remote_file=remote_file)
 
@@ -100,8 +100,9 @@ def download_session(session_name: str, max_size_MB: float, do_video: bool) -> N
 
         if file.stat().st_size < max_size:
             local_file = config.convert_to_local(file)
-            assert not local_file.exists(), \
-                "Local file already exists. This should not happen."
+            assert (
+                not local_file.exists()
+            ), "Local file already exists. This should not happen."
             # Ensure the destination directory exists
             local_file.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(file, local_file)
