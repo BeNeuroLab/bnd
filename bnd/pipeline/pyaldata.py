@@ -802,7 +802,6 @@ class ParsedNWBFile:
         # Check if size exceeds matlab 5 format
         nbytes = _get_nbytes_from_recarray(recarray=data_array)
         num_partitions = int(np.ceil(nbytes / (2**31)))
-        logger.info(f"Session ({nbytes / 2**30:.2f} GB) exceeds matlab 5 format (2 GB) ")
         recarray_size = len(data_array)
 
         assert num_partitions >= 1 and num_partitions < len(data_array)  # General checks
@@ -818,6 +817,9 @@ class ParsedNWBFile:
             return
         else:
             # Partition array
+            logger.info(
+                f"Session ({nbytes / 2**30:.2f} GB) exceeds matlab 5 format (2 GB) "
+            )
 
             logger.info(f"Partitioning array into {num_partitions} chunks...")
             partition_sizes = [
