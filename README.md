@@ -6,7 +6,6 @@ BeNeuro Lab, and a CLI tool called `bnd` for easy access to this functionality.
 Play around with it and raise Github issues if anything fails
 
 
-
 # Setting up
 
 1. Install `conda`
