@@ -19,7 +19,7 @@ def set_logging(
     logger: logging.Logger
         logger object
     """
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(name)s - %(message)s")
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
     logging.captureWarnings(True)
 
     logger = logging.getLogger(file_name)
