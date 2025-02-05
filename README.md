@@ -1,7 +1,9 @@
 # bnd : BeNeuroLab Data Organization
 
-A **lightweigth** collection of functions for managing the experimental data recorded in the 
+A **lightweight** collection of functions for managing the experimental data recorded in the 
 BeNeuro Lab, and a CLI tool called `bnd` for easy access to this functionality.
+
+Play around with it and raise Github issues if anything fails
 
 
 
