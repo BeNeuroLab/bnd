@@ -153,7 +153,7 @@ def update_bnd(print_new_commits: bool = True) -> None:
                         "env",
                         "update",
                         "-f",
-                        f"{(config.REPO_PATH / 'environment.yml')}",
+                        f"{(config.REPO_PATH / 'env.yml')}",
                         "--prune",
                         "--quiet",
                     ],
@@ -166,7 +166,7 @@ def update_bnd(print_new_commits: bool = True) -> None:
                         "env",
                         "update",
                         "-f",
-                        f"{str(Path(config.REPO_PATH / 'environment.yml'))}",
+                        f"{str(Path(config.REPO_PATH / 'env.yml'))}",
                         "--prune",
                         "--quiet",
                     ]

@@ -20,14 +20,14 @@ def set_logging(
         logger object
     """
     logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(name)s - %(message)s")
-    # logging.captureWarnings(True)
+    logging.captureWarnings(True)
 
     logger = logging.getLogger(file_name)
 
-    # def custom_warning_handler(message, category, filename, lineno, file=None, line=None):
-    #     logger.warning(f"{category.__name__}: {message}")
+    def custom_warning_handler(message, category, filename, lineno, file=None, line=None):
+        logger.warning(f"{category.__name__}: {message}")
 
     # Set the custom handler
-    # warnings.showwarning = custom_warning_handler
+    warnings.showwarning = custom_warning_handler
 
     return logger
