@@ -2,8 +2,6 @@
 Kilosort utils during nwb conversion
 """
 
-# TODO: Complete
-
 import json
 from copy import deepcopy
 from pathlib import Path
