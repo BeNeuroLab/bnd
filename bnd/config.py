@@ -102,7 +102,7 @@ class Config:
         match = re.match(self.session_name_re, file_name)
 
         if not match:
-            logger.error("file name not matching the pattern")
+            logger.debug("file name not matching the pattern")
             return False  # Doesn't match the expected pattern
 
         # Extract the datetime parts
@@ -112,14 +112,14 @@ class Config:
         try:
             dt = datetime(year, month, day, hour, minute)
         except ValueError:
-            logger.error("Invalid datetime")
+            logger.debug("Invalid datetime")
             return False
 
         # Do not allow future dates
         if dt.date() <= datetime.today().date():
             return True
         else:
-            logger.error("file has future date")
+            logger.debug("file has future date")
             return False
 
     @staticmethod
