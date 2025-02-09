@@ -202,7 +202,7 @@ class PyControlInterface(BaseTemporalAlignmentInterface):
         try:
             self.add_position(nwbfile)
         except Exception as e:
-            raise ValueError(f"Error adding motion sensor data: {e}")
+            logger.warning(f"Error parsing motion sensores: {e}")
 
     def get_metadata(self) -> DeepDict:
         metadata = DeepDict()
