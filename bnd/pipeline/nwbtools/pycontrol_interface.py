@@ -95,21 +95,7 @@ class PyControlInterface(BaseTemporalAlignmentInterface):
     def _get_pos_data(self) -> np.ndarray:
         data_x = self.session.analog_data["MotSen1-X"][:, 1]
         data_y = self.session.analog_data["MotSen1-Y"][:, 1]
-        try:
-            pos_data = np.stack([data_x, data_y]).T
-        except Exception as e:
-            warnings.warn(f"{e}")
-            logger.warning(
-                "Adding nans at the end of short array. Please fix this in the future."
-            )
-            min_array = np.argmin([arr.shape for arr in [data_x, data_y]])
-            if min_array not in [0, 1]:
-                raise ValueError("Conflicting arrays")
-            sample_diff = data_x.shape[0] - data_y.shape[0]
-            if min_array == 0:
-                pos_data = np.stack([np.append(data_x, [np.nan] * sample_diff), data_y]).T
-            elif min_array == 1:
-                pos_data = np.stack([data_x, np.append(data_y, [np.nan] * sample_diff)]).T
+        pos_data = np.stack([data_x, data_y]).T
 
         return pos_data
 
@@ -213,7 +199,10 @@ class PyControlInterface(BaseTemporalAlignmentInterface):
         self.add_behavioral_states(nwbfile)
         self.add_behavioral_events(nwbfile)
         self.add_print_events(nwbfile)
-        self.add_position(nwbfile)
+        try:
+            self.add_position(nwbfile)
+        except Exception as e:
+            raise ValueError(f"Error adding motion sensor data: {e}")
 
     def get_metadata(self) -> DeepDict:
         metadata = DeepDict()
