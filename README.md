@@ -11,7 +11,7 @@ Play around with it and raise Github issues if anything fails
    - You can use either [Miniconda](https://docs.anaconda.com/miniconda/install/#quick-command-line-install) or [Miniforge](https://github.com/conda-forge/miniforge)
 2. Clone repo
    ```shell
-   git clone https://github.com/BeNeuroLab/beneuro_experimental_data_organization.git
+   git clone git@github.com:BeNeuroLab/bnd.git
    cd ./beneuro_experimental_data_organization
    ```
 3. Open either Miniconda prompt or Miniforge promt and run the following command. This 
