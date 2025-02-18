@@ -1,5 +1,7 @@
+import shutil
 from pathlib import Path
 from typing import List
+
 
 import typer
 from rich import print
@@ -218,9 +220,14 @@ def batch_ks(animal_list: List[str]):
                     dl(session, max_size_MB=0, do_video=False)
                     to_pyal(session, kilosort_flag=True, custom_map=False)
                     up(session)
+                    shutil.rmtree(config.LOCAL_PATH / "raw" / animal / session)
                 except Exception as e:
                     print('Error in session:', session)
                     print(e)
+                    shutil.rmtree(
+                        config.LOCAL_PATH / "raw" / animal / session,
+                        ignore_errors=True
+                    )
                     continue
         except AssertionError as e:
             print('Error:', animal)
