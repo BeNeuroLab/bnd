@@ -1,8 +1,8 @@
 from pathlib import Path
+from typing import List
 
 import typer
 from rich import print
-from typing_extensions import Annotated
 
 from bnd.config import (
     _check_is_git_track,
@@ -12,6 +12,7 @@ from bnd.config import (
     _get_package_path,
     _load_config,
     get_last_session,
+    list_session_datetime,
 )
 from bnd.data_transfer import download_session, upload_session
 from bnd.pipeline import _check_processing_dependencies
@@ -192,6 +193,39 @@ def dl(
         `bnd dl M017_2024_03_12_18_45 --max-size=50` will download files smaller than 50MB
     """
     download_session(session_name, max_size_MB, do_video)
+
+
+# =================================== Batch ==========================================
+
+@app.command()
+def batch_ks(animal_list: List[str]):
+    """
+    Download data from all sessions of every animal in animal_list,
+    kilosort,
+    convert to pyal,
+    and upload back to the server.
+
+    \b
+        `bnd batch-ks M123 M124 M125`
+    """
+    config = _load_config()
+    for animal in animal_list:
+        try:
+            assert len(animal) == 4, "Animal name must be 4 characters long"
+            _,session_list = list_session_datetime(config.REMOTE_PATH / "raw" / animal)
+            for session in session_list:
+                try:
+                    dl(session, max_size_MB=0, do_video=False)
+                    to_pyal(session, kilosort_flag=True, custom_map=False)
+                    up(session)
+                except Exception as e:
+                    print('Error in session:', session)
+                    print(e)
+                    continue
+        except AssertionError as e:
+            print('Error:', animal)
+            print(e)
+            continue
 
 
 # =================================== Updating ==========================================
