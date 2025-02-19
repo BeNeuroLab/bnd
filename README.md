@@ -24,10 +24,17 @@ Play around with it and raise Github issues if anything fails
    conda env create --file=processing_env.yml
    ```
 
+   For kilosorting you will also need:
+   1. Install kilosort and the GUI, run `python -m pip install kilosort[gui]`. If you're on a zsh server, you may need to use `python -m pip install "kilosort[gui]"` 
+   2. You can also just install the minimal version of kilosort with python -m pip install kilosort.
+   3. Next, if the CPU version of pytorch was installed (will happen on Windows), remove it with `pip uninstall torch`
+   4. Then install the GPU version of pytorch `conda install pytorch pytorch-cuda=11.8 -c pytorch -c nvidia`
+
    If you installed the base environment and want to update later on:
    ```shell
-   conda env --file=processing_env.yml
+   conda env update --file=processing_env.yml
    ```
+   And then do the kilosort step
 4. Create your configuration file:
    ```shell
    bnd init  # Provide the path to local and remote data storage

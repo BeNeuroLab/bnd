@@ -116,7 +116,7 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
             .strip()
             .lower()
         )
-        if response != "y":
+        if "y" not in response:
             logger.warning(f"Aborting nwb conversion")
             return
         else:

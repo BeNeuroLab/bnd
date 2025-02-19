@@ -157,15 +157,19 @@ def run_kilosort_on_session(session_path: Path) -> None:
         logger.warning(f"Kilosort output already exists. Skipping kilosort call")
 
     else:
+        ephys_recording_folders = config.get_subdirectories_from_pattern(
+            session_path, "*_g?"
+        )
         # Check kilosort is installed in environment
         if torch.cuda.is_available():
             logger.info(f"CUDA is available. GPU device: {torch.cuda.get_device_name(0)}")
         else:
             logger.warning("CUDA is not available. GPU computations will not be enabled.")
-            return
-        ephys_recording_folders = config.get_subdirectories_from_pattern(
-            session_path, "*_g?"
-        )
+            if len(ephys_recording_folders) > 1:
+                raise ValueError(
+                    "It seems you are trying to run kilosort without GPU. Look at the README on instrucstions of how to do this. "
+                )
+
         for recording_path in ephys_recording_folders:
             logger.info(f"Processing recording: {recording_path.name}")
             run_kilosort_on_recording(
