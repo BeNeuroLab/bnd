@@ -208,7 +208,9 @@ def batch_ks(animal_list: List[str]):
     and upload back to the server.
 
     \b
-        `bnd batch-ks M123 M124 M125`
+    Example usage:
+    `yes` in Linux replies to all the prompts with 'yes'.
+        `yes | bnd batch-ks M123 M124 M125`
     """
     config = _load_config()
     for animal in animal_list:
