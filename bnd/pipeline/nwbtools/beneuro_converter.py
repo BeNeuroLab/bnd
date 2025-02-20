@@ -126,9 +126,9 @@ class BeNeuroConverter(NWBConverter):
             for probe_name, kilosort_interface in zip(
                 multikilo.probe_names, multikilo.kilosort_interfaces
             ):
-                ap_paths = list(raw_session_path.glob(f"**/*{probe_name}.ap.bin"))
-                assert len(ap_paths) == 1
-
+                # Old enforcements from recording per session
+                # ap_paths = list(raw_session_path.glob(f"**/*{probe_name}.ap.bin"))
+                # assert len(ap_paths) == 1
                 # this is needed for the alignment to work
                 # it doesn't need the sync channel inside here, I'll extract that later
 
