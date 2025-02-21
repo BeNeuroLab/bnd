@@ -32,8 +32,10 @@ def _try_adding_kilosort_to_source_data(
         if len(ksorted_folders) > 1:
             while True:
                 user_input = input(
-                    f"Found {len(ksorted_folders)} ksorted recordings. Please select one {np.arange(len(ksorted_folders))}: "
+                    f"Found {len(ksorted_folders)} ksorted recordings. Please select one {np.arange(len(ksorted_folders))}. Default [1]: "
                 )
+                if "y" in user_input.lower():
+                    user_input = 1
                 try:
                     ksorted_folder_path = ksorted_folders[int(user_input)]
                     break
