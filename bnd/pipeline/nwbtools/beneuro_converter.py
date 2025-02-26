@@ -143,7 +143,7 @@ class BeNeuroConverter(NWBConverter):
                 # this is used to get the sync channel's values
                 # and figure out when the first rising edge is
                 rec_with_sync_channel = se.read_spikeglx(
-                    raw_session_path,
+                    spikeglx_output_folder_path,  # Used to be raw_session_path
                     stream_name=f"{probe_name}.ap",
                     load_sync_channel=True,
                 )
