@@ -186,6 +186,7 @@ def dl(
 ):
     """
     Download experimental data from a given session from the remote server.
+    If session exists locally, only missing files will be downloaded.
 
     \b
     Example usage to download everything:
@@ -216,7 +217,9 @@ def batch_ks(animal_list: List[str]):
     for animal in animal_list:
         try:
             assert len(animal) == 4, "Animal name must be 4 characters long"
+
             _, session_list = list_session_datetime(config.REMOTE_PATH / "raw" / animal)
+
             for session in session_list:
                 try:
                     dl(session, max_size_MB=0, do_video=False)
