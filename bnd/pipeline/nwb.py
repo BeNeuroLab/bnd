@@ -145,6 +145,12 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
 
     metadata = converter.get_metadata()
 
+    metadata["Subject"].deep_update(
+        subject_id=config.get_animal_name(session_name=session_path.name),
+        sex="F",
+        species="Mus musculus",
+    )
+
     metadata["NWBFile"].deep_update(
         lab="Be.Neuro Lab",
         institution="Imperial College London",
