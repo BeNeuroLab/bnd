@@ -59,9 +59,6 @@ class BeNeuroConverter(NWBConverter):
         Kilosort = {
             "folder_path" : str(session_folder_path),
         },
-        AnimalProfile = {
-            "session_path" : str(session_folder_path),
-        },
         Anipose = {
             "csv_path" : str(path_to_pose_estimation_csv_file),
             "raw_session_path" : str(session_folder_path),

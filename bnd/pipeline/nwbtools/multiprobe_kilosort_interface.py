@@ -292,8 +292,6 @@ class MultiProbeKiloSortInterface(KiloSortSortingInterface):
         self.sorter_output_paths = [path.parent for path in outputs_paths]
         self.custom_map = custom_map
 
-        # breakpoint()
-
         if not len(self.sorter_output_paths):
             raise ValueError("Selected recording does not have kilosort output")
 
