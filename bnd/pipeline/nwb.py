@@ -32,8 +32,10 @@ def _try_adding_kilosort_to_source_data(
         if len(ksorted_folders) > 1:
             while True:
                 user_input = input(
-                    f"Found {len(ksorted_folders)} ksorted recordings. Please select one {np.arange(len(ksorted_folders))}: "
+                    f"Found {len(ksorted_folders)} ksorted recordings. Please select one {np.arange(len(ksorted_folders))}. Default [1]: "
                 )
+                if "y" in user_input.lower():
+                    user_input = 1
                 try:
                     ksorted_folder_path = ksorted_folders[int(user_input)]
                     break
@@ -116,7 +118,7 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
             .strip()
             .lower()
         )
-        if response != "y":
+        if "y" not in response:
             logger.warning(f"Aborting nwb conversion")
             return
         else:
@@ -138,16 +140,23 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
     )
     _try_adding_anipose_to_source_data(source_data, session_path)
 
-    # finally, run the conversion
+    
     converter = BeNeuroConverter(source_data, recording_to_process, verbose=False)
 
     metadata = converter.get_metadata()
+
+    metadata["Subject"].deep_update(
+        subject_id=config.get_animal_name(session_name=session_path.name),
+        sex="F",
+        species="Mus musculus",
+    )
 
     metadata["NWBFile"].deep_update(
         lab="Be.Neuro Lab",
         institution="Imperial College London",
     )
-
+    
+    # finally, run the conversion
     converter.run_conversion(
         metadata=metadata,
         nwbfile_path=nwb_file_output_path,

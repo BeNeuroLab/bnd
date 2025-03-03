@@ -857,12 +857,12 @@ class ParsedNWBFile:
                     .lower()
                     .strip()
                 )
-                if user_input == "y":
+                if "y" in user_input:
                     self._partition_and_save_to_mat()
                     logger.info("Session has been overwritten.")
                     break
 
-                elif user_input == "n":
+                elif "n" in user_input:
                     logger.info("Session was not overwritten.")
                     break
 

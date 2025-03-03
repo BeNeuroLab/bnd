@@ -59,9 +59,6 @@ class BeNeuroConverter(NWBConverter):
         Kilosort = {
             "folder_path" : str(session_folder_path),
         },
-        AnimalProfile = {
-            "session_path" : str(session_folder_path),
-        },
         Anipose = {
             "csv_path" : str(path_to_pose_estimation_csv_file),
             "raw_session_path" : str(session_folder_path),
@@ -126,24 +123,30 @@ class BeNeuroConverter(NWBConverter):
             for probe_name, kilosort_interface in zip(
                 multikilo.probe_names, multikilo.kilosort_interfaces
             ):
-                ap_paths = list(raw_session_path.glob(f"**/*{probe_name}.ap.bin"))
-                assert len(ap_paths) == 1
-
+                # Old enforcements from one recording per session
+                # ap_paths = list(raw_session_path.glob(f"**/*{probe_name}.ap.bin"))
+                # assert len(ap_paths) == 1
                 # this is needed for the alignment to work
                 # it doesn't need the sync channel inside here, I'll extract that later
 
-                kilosort_interface.register_recording(
-                    # SpikeGLXRecordingInterface(ap_paths[0]),
-                    SpikeGLXRecordingInterface(
-                        folder_path=str(spikeglx_output_folder_path),
-                        stream_id=f"{probe_name}.ap",
-                    )
-                )
+                # ===================================== NOTE =====================================
+                # In a previous version of neurconv we found that this function wasn't actually
+                # shifting the timestamps of the recording, but this seems to be the case. Also, before,
+                # This was needed for the allignment to work but now it doesn seem to be the case so
+                # I will remove it all together
+                # kilosort_interface.register_recording(
+                #     # SpikeGLXRecordingInterface(ap_paths[0]),
+                #     SpikeGLXRecordingInterface(
+                #         folder_path=str(spikeglx_output_folder_path),
+                #         stream_id=f"{probe_name}.ap",
+                #     )
+                # )
+                # ===============================================================================
 
                 # this is used to get the sync channel's values
                 # and figure out when the first rising edge is
                 rec_with_sync_channel = se.read_spikeglx(
-                    raw_session_path,
+                    spikeglx_output_folder_path,  # Used to be raw_session_path
                     stream_name=f"{probe_name}.ap",
                     load_sync_channel=True,
                 )

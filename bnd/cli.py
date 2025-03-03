@@ -2,7 +2,6 @@ import shutil
 from pathlib import Path
 from typing import List
 
-
 import typer
 from rich import print
 
@@ -200,6 +199,7 @@ def dl(
 
 # =================================== Batch ==========================================
 
+
 @app.command()
 def batch_ks(animal_list: List[str]):
     """
@@ -217,7 +217,9 @@ def batch_ks(animal_list: List[str]):
     for animal in animal_list:
         try:
             assert len(animal) == 4, "Animal name must be 4 characters long"
-            _,session_list = list_session_datetime(config.REMOTE_PATH / "raw" / animal)
+
+            _, session_list = list_session_datetime(config.REMOTE_PATH / "raw" / animal)
+
             for session in session_list:
                 try:
                     dl(session, max_size_MB=0, do_video=False)
@@ -225,15 +227,14 @@ def batch_ks(animal_list: List[str]):
                     up(session)
                     shutil.rmtree(config.LOCAL_PATH / "raw" / animal / session)
                 except Exception as e:
-                    print('Error in session:', session)
+                    print("Error in session:", session)
                     print(e)
                     shutil.rmtree(
-                        config.LOCAL_PATH / "raw" / animal / session,
-                        ignore_errors=True
+                        config.LOCAL_PATH / "raw" / animal / session, ignore_errors=True
                     )
                     continue
         except AssertionError as e:
-            print('Error:', animal)
+            print("Error:", animal)
             print(e)
             continue
 
