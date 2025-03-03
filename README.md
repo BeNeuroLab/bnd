@@ -12,7 +12,7 @@ Play around with it and raise Github issues if anything fails
 2. Clone repo
    ```shell
    git clone git@github.com:BeNeuroLab/bnd.git
-   cd ./beneuro_experimental_data_organization
+   cd ./bnd
    ```
 3. Open either Miniconda prompt or Miniforge promt and run the following command. This 
    may take some time: 
