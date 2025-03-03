@@ -187,6 +187,7 @@ def dl(
 ):
     """
     Download experimental data from a given session from the remote server.
+    If session exists locally, only missing files will be downloaded.
 
     \b
     Example usage to download everything:

@@ -87,8 +87,7 @@ def download_session(session_name: str, max_size_MB: float, do_video: bool) -> N
     remote_session_path = config.get_remote_session_path(session_name)
     local_session_path = config.get_local_session_path(session_name)
     if local_session_path.exists():
-        logger.error(f"Session {session_name} already exists locally.")
-        return
+        logger.info(f"Session {session_name} exists locally.")
 
     # Excluding directories as `rglob()` returns directories as well
     remote_files = [file for file in remote_session_path.rglob("*") if file.is_file()]
@@ -100,14 +99,14 @@ def download_session(session_name: str, max_size_MB: float, do_video: bool) -> N
 
         if file.stat().st_size < max_size:
             local_file = config.convert_to_local(file)
-            assert (
-                not local_file.exists()
-            ), "Local file already exists. This should not happen."
+            if local_file.exists():
+                logger.warning(f'"{file.name}" exists locally. Skipping.')
+                continue
             # Ensure the destination directory exists
             local_file.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(file, local_file)
             logger.info(f'Downloaded "{file.name}"')
         else:
-            logger.warning(f'"{file.name}" is too large. Skipping.')
+            logger.info(f'"{file.name}" is too large. Skipping.')
 
     logger.info("Download complete.")
