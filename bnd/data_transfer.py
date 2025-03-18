@@ -24,7 +24,7 @@ def _upload_file(local_file: Path, remote_file: Path):
 
     # Ensure the destination directory exists
     remote_file.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(local_file, remote_file)
+    shutil.copy(local_file, remote_file)
     logger.info(f'Uploaded "{local_file.name}"')
 
 
@@ -104,7 +104,7 @@ def download_session(session_name: str, max_size_MB: float, do_video: bool) -> N
                 continue
             # Ensure the destination directory exists
             local_file.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(file, local_file)
+            shutil.copy(file, local_file)
             logger.info(f'Downloaded "{file.name}"')
         else:
             logger.info(f'"{file.name}" is too large. Skipping.')
