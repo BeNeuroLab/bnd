@@ -4,7 +4,7 @@ import shutil
 from pathlib import Path
 
 from bnd import set_logging
-from bnd.config import _load_config
+from bnd.config import _load_config, list_session_datetime
 
 logger = set_logging(__name__)
 
@@ -81,6 +81,21 @@ def download_session(session_name: str, max_size_MB: float, do_video: bool) -> N
     Download a session from the server.
     """
     config = _load_config()
+
+    if not config.file_name_ok(session_name):
+        # bad session name, try to find a session with a similar name
+        remote_animal_path = config.get_remote_animal_path(session_name)
+        _,session_list = list_session_datetime(remote_animal_path)
+        match_session = [session for session in session_list if session_name in session]
+        if match_session:
+            session_name = match_session[0]
+            response = input(f"\nDid you mean {session_name} (y/n)? ").strip().lower()
+            if "n" in response:
+                logger.error("Download aborted!")
+                return
+            logger.info(f"Session name corrected to {session_name}")
+        else:
+            logger.error("Bad session name. Download aborted!")
 
     if int(max_size_MB) <= 0:
         max_size = float("inf")

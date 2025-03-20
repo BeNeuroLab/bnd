@@ -69,6 +69,12 @@ class Config:
                 # Set as environment variable
                 setattr(self, key, Path(value))
 
+    def get_local_animal_path(self, animal_name_like: str) -> Path:
+        return self.LOCAL_PATH / "raw" / self.get_animal_name(animal_name_like)
+
+    def get_remote_animal_path(self, animal_name_like: str) -> Path:
+        return self.REMOTE_PATH / "raw" / self.get_animal_name(animal_name_like)
+
     def get_remote_session_path(self, session_name: str) -> Path:
         animal = self.get_animal_name(session_name)
         remote_session_path = self.REMOTE_PATH / "raw" / animal / session_name
