@@ -152,6 +152,7 @@ def up(
     """
     Upload data to the server. If the file exists on the server, it won't be replaced.
     Every file in the session folder will get uploaded.
+    If animal name give, the last session will get uploaded.
 
     \b
     Example usage to upload everything of a given session:
@@ -185,8 +186,9 @@ def dl(
     ),
 ):
     """
-    Download experimental data from a given session from the remote server.
+    Download data of a given session from the remote server.
     If session exists locally, only missing files will be downloaded.
+    if session name is not complete (`M123_2025_02_03`), it will try to find a similar session.
 
     \b
     Example usage to download everything:
