@@ -198,6 +198,7 @@ def dl(
         `bnd dl M017_2024_03_12_18_45 -v` will download everything, including videos
         `bnd dl M017_2024_03_12_18_45` will download everything, except videos
         `bnd dl M017_2024_03_12_18_45 --max-size=50` will download files smaller than 50MB
+        `bnd dl M056_2025_03_01 .mat` will download all the '.mat' files from the matching session
     """
     download_session(session_name, file_extension, max_size_MB, do_video)
 
