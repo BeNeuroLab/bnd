@@ -1,4 +1,6 @@
 from pathlib import Path
+from configparser import ConfigParser
+import os
 
 import torch
 from kilosort import run_kilosort
@@ -6,29 +8,68 @@ from kilosort.utils import PROBE_DIR, download_probes
 
 from bnd import set_logging
 from bnd.config import Config, _load_config
+from ..config import find_file
 
 logger = set_logging(__name__)
 
 
-def _read_probe_type(meta_file_path: str) -> str:
-    with open(meta_file_path, "r") as meta_file:
-        for line in meta_file:
-            if "imDatPrb_type" in line:
-                _, value = line.strip().split("=")
-                break
+def read_metadata(filepath: Path) -> dict:
+    """Parse a section-less INI file (eg NPx metadata file) and return a dictionary of key-value pairs."""
+    with open(filepath, 'r') as f:
+        content = f.read()
+        # Inject a dummy section header
+        content_with_section = '[dummy_section]\n' + content
 
-        if int(value) == 0:
-            probe_type = (
-                "neuropixPhase3B1_kilosortChanMap.mat"  # Neuropixels Phase3B1 (staggered)
-            )
-        elif int(value) == 21:
-            probe_type = "NP2_kilosortChanMap.mat"
-        else:
-            raise ValueError(
-                "Probe type not recogised. It appears to be different from Npx 1.0 or 2.0"
-            )
+    config = ConfigParser()
+    config.read_string(content_with_section)
+
+    return dict(config.items('dummy_section'))
+
+
+def add_entry_to_metadata(filepath: Path, tag: str, value: str) -> None:
+    """
+    Add or update a tag=value entry in the NPx metadata.
+    """
+    # Read and inject dummy section
+    with open(filepath, 'r') as f:
+        content = f.read()
+    content_with_section = '[dummy_section]\n' + content
+
+    # Parse and modify
+    config = ConfigParser()
+    config.read_string(content_with_section)
+    config.set('dummy_section', tag, value)
+
+    # Write back without the dummy section
+    with open(filepath, 'w') as f:
+        for key, val in config.items('dummy_section'):
+            f.write(f"{key} = {val}\n")
+
+def _read_probe_type(meta_file_path: str) -> str:
+    meta = read_metadata(meta_file_path)
+    probe_type_val = meta["imDatPrb_type"]
+    if int(probe_type_val) == 0:
+        probe_type = (
+            "neuropixPhase3B1_kilosortChanMap.mat"  # Neuropixels Phase3B1 (staggered)
+        )
+    elif int(probe_type_val) == 21:
+        probe_type = "NP2_kilosortChanMap.mat"
+    else:
+        raise ValueError(
+            "Probe type not recogised. It appears to be different from Npx 1.0 or 2.0"
+        )
     return probe_type
 
+def _fix_session_metadata(meta_file_path: Path) -> None:
+    """ to inject `fileSizeBytes` and `fileTimeSecs` if they are missing"""
+    meta = read_metadata(meta_file_path)
+    if "fileSizeBytes" not in meta:
+        datafile_path = find_file(meta_file_path.parent, 'ap.bin')[0]
+        data_size = os.path.getsize(datafile_path)
+        add_entry_to_metadata(meta_file_path, "fileSizeBytes", str(data_size))
+        data_duration = data_size / int(meta['nSavedChans']) / 2 / int(meta["imSampRate"])
+        add_entry_to_metadata(meta_file_path, "fileTimeSecs", str(data_duration))
+        logger.warning(f"Metadata missing values: Injected fileSizeBytes: {data_size} and fileTimeSecs: {data_duration}")
 
 def run_kilosort_on_stream(
     config: Config,
@@ -55,9 +96,10 @@ def run_kilosort_on_stream(
     -------
 
     """
+    meta_file_path = config.get_subdirectories_from_pattern(probe_folder_path, "*ap.meta")[0]
 
     sorter_params = {
-        "n_chan_bin": 385,
+        "n_chan_bin": int(read_metadata(meta_file_path)["nSavedChans"]),
     }
 
     ksort_output_path = (
@@ -76,9 +118,12 @@ def run_kilosort_on_stream(
         # Sometimes the gateway can throw an error so just double check.
         download_probes()
 
+    
+    # Check if the metadata file is complete
+    # when SpikeGLX crashes, metadata misses some values.
+    _fix_session_metadata(meta_file_path)
     # Find out which probe type we have
-    meta_file_path = config.get_subdirectories_from_pattern(probe_folder_path, "*ap.meta")
-    probe_name = _read_probe_type(str(meta_file_path[0]))
+    probe_name = _read_probe_type(meta_file_path)
 
     _ = run_kilosort(
         settings=sorter_params,
