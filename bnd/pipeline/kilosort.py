@@ -45,7 +45,7 @@ def add_entry_to_metadata(filepath: Path, tag: str, value: str) -> None:
     # Write back without the dummy section
     with open(filepath, 'w') as f:
         for key, val in config.items('dummy_section'):
-            f.write(f"{key} = {val}\n")
+            f.write(f"{key}={val}\n")
 
 def _read_probe_type(meta_file_path: str) -> str:
     meta = read_metadata(meta_file_path)
