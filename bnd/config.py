@@ -149,30 +149,29 @@ def _load_config() -> Config:
     return Config()
 
 
-def find_file(
-    main_path: str | Path, extension: tuple[str | Path] = (".txt",)
-) -> list[Path]:
+def find_file(path: str | Path, extension: tuple[str] = ('.raw.kwd',)) -> list[Path]:
     """
-    This function finds all the file types specified by 'extension' in the 'main_path' directory
-    and all its subdirectories and their sub-subdirectories etc.,
-    and returns a list of all file paths
-    'extension' is a list of desired file extensions: ['.dat','.prm']
+    Recursively finds files with the specified extensions within the given path.
+    `path` (str or Path): The directory in which to search for files.
+    `extension`: A tuple of file extensions e.g., ('.dat', '.prm').
     """
-    if isinstance(main_path, str):
-        path = Path(main_path)
-    else:
-        path = main_path
+    p = Path(path)
+    if not p.exists():
+        raise FileNotFoundError(f"Path does not exist: {p}")
 
+    # Convert extension to list if it is a string.
     if isinstance(extension, str):
-        extension = extension.split()  # turning extension into a list with a single element
+        extension = extension.split()
 
-    return [
-        Path(walking[0] / goodfile)
-        for walking in path.walk()
-        for goodfile in walking[2]
-        for ext in extension
-        if goodfile.endswith(ext)
-    ]
+    # Normalize extensions to ensure they start with a dot.
+    normalized_exts = [ext if ext.startswith('.') else '.' + ext for ext in extension]
+
+    found_files = []
+    for ext in normalized_exts:
+        for file in p.rglob(f"*{ext}"):
+            if file.is_file():
+                found_files.append(file)
+    return found_files
 
 
 def list_dirs(main_path: str | Path) -> list[str]:
