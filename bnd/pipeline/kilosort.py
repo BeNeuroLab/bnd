@@ -21,6 +21,7 @@ def read_metadata(filepath: Path) -> dict:
         content_with_section = '[dummy_section]\n' + content
 
     config = ConfigParser()
+    config.optionxform = str  # disables lowercasing
     config.read_string(content_with_section)
 
     return dict(config.items('dummy_section'))
@@ -37,6 +38,7 @@ def add_entry_to_metadata(filepath: Path, tag: str, value: str) -> None:
 
     # Parse and modify
     config = ConfigParser()
+    config.optionxform = str  # disables lowercasing
     config.read_string(content_with_section)
     config.set('dummy_section', tag, value)
 
