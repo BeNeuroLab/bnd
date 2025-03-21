@@ -31,21 +31,8 @@ def add_entry_to_metadata(filepath: Path, tag: str, value: str) -> None:
     """
     Add or update a tag=value entry in the NPx metadata.
     """
-    # Read and inject dummy section
-    with open(filepath, 'r') as f:
-        content = f.read()
-    content_with_section = '[dummy_section]\n' + content
-
-    # Parse and modify
-    config = ConfigParser()
-    config.optionxform = str  # disables lowercasing
-    config.read_string(content_with_section)
-    config.set('dummy_section', tag, value)
-
-    # Write back without the dummy section
-    with open(filepath, 'w') as f:
-        for key, val in config.items('dummy_section'):
-            f.write(f"{key}={val}\n")
+    with open(filepath, 'a') as f:  # append mode
+        f.write(f"{tag}={value}\n")
 
 def _read_probe_type(meta_file_path: str) -> str:
     meta = read_metadata(meta_file_path)
