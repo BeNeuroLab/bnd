@@ -53,7 +53,7 @@ def upload_session(session_name: str) -> None:
         and file.is_file()
     ]
     if not pending_local_files:
-        logger.info(f"No files to upload.")
+        logger.info("No files to upload.")
         return
 
     # Check if file names follow the session name convention
@@ -76,7 +76,7 @@ def upload_session(session_name: str) -> None:
     logger.info("Upload complete.")
 
 
-def download_session(session_name: str, max_size_MB: float, do_video: bool) -> None:
+def download_session(session_name: str, file_extension: str, max_size_MB: float, do_video: bool) -> None:
     """
     Download a session from the server.
     """
@@ -108,7 +108,8 @@ def download_session(session_name: str, max_size_MB: float, do_video: bool) -> N
         logger.info(f"Session {session_name} exists locally.")
 
     # Excluding directories as `rglob()` returns directories as well
-    remote_files = [file for file in remote_session_path.rglob("*") if file.is_file()]
+    # Including only files with the right extension.
+    remote_files = [file for file in remote_session_path.rglob(f"*{file_extension}") if file.is_file()]
 
     for file in remote_files:
         if file.suffix in config.video_formats and not do_video:
