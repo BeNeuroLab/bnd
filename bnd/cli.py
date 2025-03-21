@@ -3,6 +3,8 @@ from pathlib import Path
 from typing import List
 
 import typer
+from typing_extensions import Annotated
+
 from rich import print
 
 from bnd.config import (
@@ -173,6 +175,7 @@ def up(
 @app.command()
 def dl(
     session_name: str = typer.Argument(help="Name of session: M123_2000_02_03_14_15"),
+    file_extension: Annotated[str, typer.Argument(help="One file type to download")] = ".*",
     max_size_MB: float = typer.Option(
         0,
         "--max-size",
@@ -196,7 +199,7 @@ def dl(
         `bnd dl M017_2024_03_12_18_45` will download everything, except videos
         `bnd dl M017_2024_03_12_18_45 --max-size=50` will download files smaller than 50MB
     """
-    download_session(session_name, max_size_MB, do_video)
+    download_session(session_name, file_extension, max_size_MB, do_video)
 
 
 # =================================== Batch ==========================================
