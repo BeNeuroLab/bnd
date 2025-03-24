@@ -4,7 +4,6 @@ Module for conversion from nwb to pyaldata format
 
 from pathlib import Path
 
-import h5py
 import numpy as np
 import pandas as pd
 import scipy
@@ -546,7 +545,7 @@ class ParsedNWBFile:
         # TODO: Fix time units
         start_time = 0.0
         end_time = self.pycontrol_states.stop_time.values[-1] / 1000  # To seconds
-        number_of_bins = int(np.floor((end_time - start_time) / self.bin_size))
+
         self.pyaldata_df["trial_id"] = self.pycontrol_states.start_time.index
         self.pyaldata_df["bin_size"] = self.bin_size
 
@@ -554,17 +553,13 @@ class ParsedNWBFile:
         self.pyaldata_df["idx_trial_start"] = np.floor(
             self.pycontrol_states.start_time.values[:] / 1000 / self.bin_size
         ).astype(int)
-        self.pyaldata_df["idx_trial_end"] = np.floor(
-            self.pycontrol_states.stop_time.values[:] / 1000 / self.bin_size
-        ).astype(int)
-
+        self.pyaldata_df["idx_trial_end"] = (
+            np.floor(
+                self.pycontrol_states.stop_time.values[:] / 1000 / self.bin_size
+            ).astype(int)
+            - 1
+        )
         self.pyaldata_df["trial_name"] = self.pycontrol_states.state_name[:]
-
-        if self.pyaldata_df.idx_trial_end.values[-1] != number_of_bins:
-            logger.warning(
-                f"Extract number of bins: {self.pyaldata_df.idx_trial_end.values[-1]} does not match calculated "
-                f"number of bins: {number_of_bins} "
-            )
 
         self.pyaldata_df["trial_length"] = (
             self.pyaldata_df["idx_trial_end"] - self.pyaldata_df["idx_trial_start"] + 1
