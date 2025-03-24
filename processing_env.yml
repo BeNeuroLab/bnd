@@ -17,4 +17,4 @@ dependencies:
   - pip:
       - ndx_pose
       - neuroconv~=0.6.0
-      - -e ./
+      - -e .
