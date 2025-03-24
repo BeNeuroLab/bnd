@@ -87,6 +87,8 @@ class PyControlInterface(BaseTemporalAlignmentInterface):
         time_x = self.session.analog_data["MotSen1-X"][:, 0]
         time_y = self.session.analog_data["MotSen1-Y"][:, 0]
 
+        breakpoint()
+
         assert len(time_x) == len(time_y)
         assert np.all(time_x == time_y)
 
