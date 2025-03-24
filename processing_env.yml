@@ -16,5 +16,5 @@ dependencies:
   - spikeinterface
   - pip:
       - ndx_pose
-      - neuroconv
-      - -e ./
+      - neuroconv~=0.6.0
+      - -e .
