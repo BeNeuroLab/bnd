@@ -546,7 +546,7 @@ class ParsedNWBFile:
         # TODO: Fix time units
         start_time = 0.0
         end_time = self.pycontrol_states.stop_time.values[-1] / 1000  # To seconds
-        number_of_bins = int(np.floor((end_time - start_time) / self.bin_size))
+
         self.pyaldata_df["trial_id"] = self.pycontrol_states.start_time.index
         self.pyaldata_df["bin_size"] = self.bin_size
 
@@ -560,14 +560,7 @@ class ParsedNWBFile:
             ).astype(int)
             - 1
         )
-
         self.pyaldata_df["trial_name"] = self.pycontrol_states.state_name[:]
-
-        if self.pyaldata_df.idx_trial_end.values[-1] != number_of_bins - 1:
-            logger.warning(
-                f"Extracted number of bins: {self.pyaldata_df.idx_trial_end.values[-1]} does not match calculated "
-                f"number of bins: {number_of_bins} "
-            )
 
         self.pyaldata_df["trial_length"] = (
             self.pyaldata_df["idx_trial_end"] - self.pyaldata_df["idx_trial_start"] + 1
