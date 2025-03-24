@@ -554,15 +554,18 @@ class ParsedNWBFile:
         self.pyaldata_df["idx_trial_start"] = np.floor(
             self.pycontrol_states.start_time.values[:] / 1000 / self.bin_size
         ).astype(int)
-        self.pyaldata_df["idx_trial_end"] = np.floor(
-            self.pycontrol_states.stop_time.values[:] / 1000 / self.bin_size
-        ).astype(int)
+        self.pyaldata_df["idx_trial_end"] = (
+            np.floor(
+                self.pycontrol_states.stop_time.values[:] / 1000 / self.bin_size
+            ).astype(int)
+            - 1
+        )
 
         self.pyaldata_df["trial_name"] = self.pycontrol_states.state_name[:]
 
-        if self.pyaldata_df.idx_trial_end.values[-1] != number_of_bins:
+        if self.pyaldata_df.idx_trial_end.values[-1] != number_of_bins - 1:
             logger.warning(
-                f"Extract number of bins: {self.pyaldata_df.idx_trial_end.values[-1]} does not match calculated "
+                f"Extracted number of bins: {self.pyaldata_df.idx_trial_end.values[-1]} does not match calculated "
                 f"number of bins: {number_of_bins} "
             )
 
