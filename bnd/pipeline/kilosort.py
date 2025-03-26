@@ -49,7 +49,7 @@ def _read_probe_type(meta_file_path: str) -> str:
         )
     return probe_type
 
-def _fix_session_metadata(meta_file_path: Path) -> None:
+def _fix_session_ap_metadata(meta_file_path: Path) -> None:
     """ to inject `fileSizeBytes` and `fileTimeSecs` if they are missing"""
     meta = read_metadata(meta_file_path)
     if "fileSizeBytes" not in meta:
@@ -58,7 +58,20 @@ def _fix_session_metadata(meta_file_path: Path) -> None:
         add_entry_to_metadata(meta_file_path, "fileSizeBytes", str(data_size))
         data_duration = data_size / int(meta['nSavedChans']) / 2 / int(meta["imSampRate"])
         add_entry_to_metadata(meta_file_path, "fileTimeSecs", str(data_duration))
-        logger.warning(f"Metadata missing values: Injected fileSizeBytes: {data_size} and fileTimeSecs: {data_duration}")
+        logger.warning(f"AP Metadata missing values: Injected fileSizeBytes: {data_size} and fileTimeSecs: {data_duration}")
+        _fix_session_lf_metadata(meta_file_path)
+
+def _fix_session_lf_metadata(meta_ap_path: Path) -> None:
+    """ to inject `fileSizeBytes` and `fileTimeSecs` to the LFP metadata, if they are missing"""
+    meta_file_path = meta_ap_path.parent / (meta_ap_path.stem.replace("ap", "lf") + ".meta")
+    meta = read_metadata(meta_file_path)
+    if "fileSizeBytes" not in meta:
+        datafile_path = find_file(meta_file_path.parent, 'lf.bin')[0]
+        data_size = os.path.getsize(datafile_path)
+        add_entry_to_metadata(meta_file_path, "fileSizeBytes", str(data_size))
+        data_duration = data_size / int(meta['nSavedChans']) / 2 / int(meta["imSampRate"])
+        add_entry_to_metadata(meta_file_path, "fileTimeSecs", str(data_duration))
+        logger.warning(f"LFP Metadata missing values: Injected fileSizeBytes: {data_size} and fileTimeSecs: {data_duration}")
 
 def run_kilosort_on_stream(
     config: Config,
@@ -110,7 +123,7 @@ def run_kilosort_on_stream(
     
     # Check if the metadata file is complete
     # when SpikeGLX crashes, metadata misses some values.
-    _fix_session_metadata(meta_file_path)
+    _fix_session_ap_metadata(meta_file_path)
     # Find out which probe type we have
     probe_name = _read_probe_type(meta_file_path)
 
