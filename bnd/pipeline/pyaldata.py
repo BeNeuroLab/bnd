@@ -273,20 +273,24 @@ def _parse_spatial_series(spatial_series: SpatialSeries) -> pd.DataFrame:
     pd.DataFrame :
         Contains x, y, z and timestamp
     """
-
-    if spatial_series.data[:].shape[1] == 2:
-        colnames = ["x", "y"]
-    elif spatial_series.data[:].shape[1] == 3:
-        colnames = ["x", "y", "z"]
-    else:
-        raise ValueError(
-            f"Shape {spatial_series.data[:].shape} is not supported by pynwb. "
-            f"Please provide a valid SpatialSeries object"
-        )
-
     df = pd.DataFrame()
-    for i, col in enumerate(colnames):
-        df[col] = spatial_series.data[:, i]
+
+    if spatial_series.data.ndim == 1:
+        df["data"] = spatial_series.data[:]
+
+    else:
+        if spatial_series.data[:].shape[1] > 3:
+            raise ValueError(
+                f"Shape {spatial_series.data[:].shape} is not supported by pynwb. "
+                f"Please provide a valid SpatialSeries object"
+            )
+        if spatial_series.data[:].shape[1] == 2:
+            colnames = ["x", "y"]
+        elif spatial_series.data[:].shape[1] == 3:
+            colnames = ["x", "y", "z"]
+
+        for i, col in enumerate(colnames):
+            df[col] = spatial_series.data[:, i]
 
     df["timestamps"] = spatial_series.timestamps[:]
 
@@ -490,10 +494,12 @@ class ParsedNWBFile:
             logger.warning("No motion data available")
             return
 
-        ball_position_spatial_series = self.behavior["Position"].spatial_series[
-            "Ball position"
-        ]
-        self.pycontrol_motion_sensors = _parse_spatial_series(ball_position_spatial_series)
+        for spatial_series_key, spatial_series in self.behavior[
+            "Position"
+        ].spatial_series.items():
+            # These keys will normally be MotSen1-X or MotSen1-Y
+            setattr(self, spatial_series_key, _parse_spatial_series(spatial_series))
+
         return
 
     def try_parsing_anipose_output(self):
