@@ -284,13 +284,7 @@ def _parse_spatial_series(spatial_series: SpatialSeries) -> pd.DataFrame:
                 f"Shape {spatial_series.data[:].shape} is not supported by pynwb. "
                 f"Please provide a valid SpatialSeries object"
             )
-        if spatial_series.data[:].shape[1] == 2:
-            colnames = ["x", "y"]
-        elif spatial_series.data[:].shape[1] == 3:
-            colnames = ["x", "y", "z"]
-
-        for i, col in enumerate(colnames):
-            df[col] = spatial_series.data[:, i]
+        raise NotImplementedError("We currently only support 1d spatial series.")
 
     df["timestamps"] = spatial_series.timestamps[:]
 
