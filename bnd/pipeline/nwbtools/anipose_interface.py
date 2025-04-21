@@ -49,6 +49,8 @@ class AniposeInterface(BaseTemporalAlignmentInterface):
         ("right_knee_angle", ["hip_center", "right_knee", "right_ankle"]),
         ("left_ankle_angle", ["left_knee", "left_ankle", "left_foot"]),
         ("right_ankle_angle", ["right_knee", "right_ankle", "right_foot"]),
+        ("right_wrist_angle", ["right_elbow", "right_wrist", "right_paw"]),
+        ("left_wrist_angle", ["left_elbow", "left_wrist", "left_paw"]),
     )
 
     def __init__(self, csv_path: Path):

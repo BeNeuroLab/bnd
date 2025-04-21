@@ -86,7 +86,7 @@ def _try_adding_anipose_to_source_data(source_data: dict, session_path: Path):
 
     csv_path = csv_paths[0]
     try:
-        AniposeInterface(csv_path, session_path)
+        AniposeInterface(csv_path)
     except Exception as e:
         logger.warning(f"Problem loading anipose data: {str(e)}")
     else:

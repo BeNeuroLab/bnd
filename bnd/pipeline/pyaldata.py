@@ -508,6 +508,8 @@ class ParsedNWBFile:
             logger.warning("No anipose data available")
             return
 
+        logger.info("Parsing anipose output")
+
         anipose_data_dict = self.behavior["Pose estimation"].pose_estimation_series
 
         parsed_anipose_data_dict = {}
