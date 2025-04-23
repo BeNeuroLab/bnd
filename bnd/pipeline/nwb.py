@@ -86,14 +86,13 @@ def _try_adding_anipose_to_source_data(source_data: dict, session_path: Path):
 
     csv_path = csv_paths[0]
     try:
-        AniposeInterface(csv_path, session_path)
+        AniposeInterface(csv_path)
     except Exception as e:
         logger.warning(f"Problem loading anipose data: {str(e)}")
     else:
         source_data.update(
             Anipose={
                 "csv_path": str(csv_path),
-                "raw_session_path": str(session_path),
             }
         )
 
@@ -140,7 +139,6 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
     )
     _try_adding_anipose_to_source_data(source_data, session_path)
 
-    
     converter = BeNeuroConverter(source_data, recording_to_process, verbose=False)
 
     metadata = converter.get_metadata()
@@ -155,7 +153,7 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
         lab="Be.Neuro Lab",
         institution="Imperial College London",
     )
-    
+
     # finally, run the conversion
     converter.run_conversion(
         metadata=metadata,
