@@ -132,3 +132,14 @@ def download_session(session_name: str, file_extension: str, max_size_MB: float,
             logger.info(f'"{file.name}" is too large. Skipping.')
 
     logger.info("Download complete.")
+
+def download_animal(animal_name: str, file_extension: str, max_size_MB: float, do_video: bool) -> None:
+    """
+    Download a session from the server.
+    """
+    config = _load_config()
+
+    remote_animal_path = config.get_remote_animal_path(animal_name)
+    _,session_list = list_session_datetime(remote_animal_path)
+    for session_name in session_list:
+        download_session(session_name, file_extension, max_size_MB, do_video)
