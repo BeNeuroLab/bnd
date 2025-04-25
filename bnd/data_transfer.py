@@ -133,9 +133,17 @@ def download_session(session_name: str, file_extension: str, max_size_MB: float,
 
     logger.info("Download complete.")
 
-def download_animal(animal_name: str, file_extension: str, max_size_MB: float, do_video: bool) -> None:
+def download_animal(animal_name: str, file_extension: str, max_size_MB: float = 0, do_video: bool = False) -> None:
     """
-    Download a session from the server.
+    Download a all the data of an animal from the server.
+    animal_name: str = 'M123'
+        Name of the animal to download
+    file_extension: str = '.log'
+        One file type to download
+    max_size_MB: float = 0
+        Maximum size in MB. Any smaller file will be downloaded. Zero mean infinite size
+    do_video: bool = False
+        Download video files as well, if they are smaller than `max_size_MB`. No video files by default.
     """
     config = _load_config()
 
