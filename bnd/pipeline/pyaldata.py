@@ -12,9 +12,9 @@ from pynwb import NWBHDF5IO
 from pynwb.behavior import SpatialSeries
 from pynwb.misc import Units
 
-from bnd import set_logging
-from bnd.config import _load_config
-from bnd.pipeline.nwb import run_nwb_conversion
+from ..logger import set_logging
+from ..config import _load_config
+from ..pipeline.nwb import run_nwb_conversion
 
 logger = set_logging(__name__)
 

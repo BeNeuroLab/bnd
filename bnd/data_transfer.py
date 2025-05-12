@@ -3,8 +3,8 @@
 import shutil
 from pathlib import Path
 
-from bnd import set_logging
-from bnd.config import _load_config, list_session_datetime
+from .logger import set_logging
+from .config import _load_config, list_session_datetime
 
 logger = set_logging(__name__)
 
@@ -132,3 +132,22 @@ def download_session(session_name: str, file_extension: str, max_size_MB: float,
             logger.info(f'"{file.name}" is too large. Skipping.')
 
     logger.info("Download complete.")
+
+def download_animal(animal_name: str, file_extension: str, max_size_MB: float = 0, do_video: bool = False) -> None:
+    """
+    Download a all the data of an animal from the server.
+    animal_name: str = 'M123'
+        Name of the animal to download
+    file_extension: str = '.log'
+        One file type to download
+    max_size_MB: float = 0
+        Maximum size in MB. Any smaller file will be downloaded. Zero mean infinite size
+    do_video: bool = False
+        Download video files as well, if they are smaller than `max_size_MB`. No video files by default.
+    """
+    config = _load_config()
+
+    remote_animal_path = config.get_remote_animal_path(animal_name)
+    _,session_list = list_session_datetime(remote_animal_path)
+    for session_name in session_list:
+        download_session(session_name, file_extension, max_size_MB, do_video)
