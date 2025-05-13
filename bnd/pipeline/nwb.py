@@ -4,12 +4,12 @@ from pathlib import Path
 import numpy as np
 from rich import print
 
-from ..logger import set_logging
-from ..config import _load_config
-from .kilosort import run_kilosort_on_session
-from .nwbtools.anipose_interface import AniposeInterface
-from .nwbtools.beneuro_converter import BeNeuroConverter
-from .nwbtools.multiprobe_kilosort_interface import (
+from bnd import set_logging
+from bnd.config import _load_config
+from bnd.pipeline.kilosort import run_kilosort_on_session
+from bnd.pipeline.nwbtools.anipose_interface import AniposeInterface
+from bnd.pipeline.nwbtools.beneuro_converter import BeNeuroConverter
+from bnd.pipeline.nwbtools.multiprobe_kilosort_interface import (
     MultiProbeKiloSortInterface,
 )
 

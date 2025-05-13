@@ -7,7 +7,7 @@ from typing_extensions import Annotated
 
 from rich import print
 
-from .config import (
+from bnd.config import (
     _check_is_git_track,
     _check_root,
     _check_session_directory,
@@ -17,9 +17,9 @@ from .config import (
     get_last_session,
     list_session_datetime,
 )
-from .data_transfer import download_session, upload_session
-from .pipeline import _check_processing_dependencies
-from .update_bnd import check_for_updates, update_bnd
+from bnd.data_transfer import download_session, upload_session
+from bnd.pipeline import _check_processing_dependencies
+from bnd.update_bnd import check_for_updates, update_bnd
 
 # Create a Typer app
 app = typer.Typer(

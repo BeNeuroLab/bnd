@@ -6,13 +6,13 @@ from neuroconv import NWBConverter
 from neuroconv.datainterfaces import SpikeGLXRecordingInterface  # PhySortingInterface
 from neuroconv.tools.signal_processing import get_rising_frames_from_ttl
 
-from ...logger import set_logging
-from ...config import _load_config
-from .anipose_interface import AniposeInterface
-from .multiprobe_kilosort_interface import (
+from bnd import set_logging
+from bnd.config import _load_config
+from bnd.pipeline.nwbtools.anipose_interface import AniposeInterface
+from bnd.pipeline.nwbtools.multiprobe_kilosort_interface import (
     MultiProbeKiloSortInterface,
 )
-from .pycontrol_interface import PyControlInterface
+from bnd.pipeline.nwbtools.pycontrol_interface import PyControlInterface
 
 logger = set_logging(__name__)
 config = _load_config()

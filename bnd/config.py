@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-from .logger import set_logging
+from bnd import set_logging
 
 logger = set_logging(__name__)
 

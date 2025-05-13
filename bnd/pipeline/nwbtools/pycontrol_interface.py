@@ -15,7 +15,7 @@ from pynwb import NWBFile
 from pynwb.behavior import BehavioralEvents, Position, SpatialSeries
 from pynwb.epoch import TimeIntervals
 
-from ...logger import set_logging
+from bnd import set_logging
 
 from .pycontrol_data_import import Event, Print, Session, State
 

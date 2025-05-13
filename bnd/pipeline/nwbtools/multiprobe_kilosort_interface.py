@@ -15,7 +15,7 @@ from neuroconv.tools.spikeinterface import add_sorting_to_nwbfile
 from neuroconv.utils import DeepDict
 from pynwb import NWBFile
 
-from ...logger import set_logging
+from bnd import set_logging
 
 logger = set_logging(__name__)
 
