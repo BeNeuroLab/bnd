@@ -8,7 +8,7 @@ from datetime import datetime
 
 import numpy as np
 
-from bnd import set_logging
+from ...logger import set_logging
 
 logger = set_logging(__name__)
 
