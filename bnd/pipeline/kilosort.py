@@ -1,6 +1,6 @@
-from pathlib import Path
-from configparser import ConfigParser
 import os
+from configparser import ConfigParser
+from pathlib import Path
 
 import torch
 from kilosort import run_kilosort
@@ -8,6 +8,7 @@ from kilosort.utils import PROBE_DIR, download_probes
 
 from bnd import set_logging
 from bnd.config import Config, _load_config
+
 from ..config import find_file
 
 logger = set_logging(__name__)
@@ -15,24 +16,25 @@ logger = set_logging(__name__)
 
 def read_metadata(filepath: Path) -> dict:
     """Parse a section-less INI file (eg NPx metadata file) and return a dictionary of key-value pairs."""
-    with open(filepath, 'r') as f:
+    with open(filepath, "r") as f:
         content = f.read()
         # Inject a dummy section header
-        content_with_section = '[dummy_section]\n' + content
+        content_with_section = "[dummy_section]\n" + content
 
     config = ConfigParser()
     config.optionxform = str  # disables lowercasing
     config.read_string(content_with_section)
 
-    return dict(config.items('dummy_section'))
+    return dict(config.items("dummy_section"))
 
 
 def add_entry_to_metadata(filepath: Path, tag: str, value: str) -> None:
     """
     Add or update a tag=value entry in the NPx metadata.
     """
-    with open(filepath, 'a') as f:  # append mode
+    with open(filepath, "a") as f:  # append mode
         f.write(f"{tag}={value}\n")
+
 
 def _read_probe_type(meta_file_path: str) -> str:
     meta = read_metadata(meta_file_path)
@@ -41,7 +43,7 @@ def _read_probe_type(meta_file_path: str) -> str:
         probe_type = (
             "neuropixPhase3B1_kilosortChanMap.mat"  # Neuropixels Phase3B1 (staggered)
         )
-    elif int(probe_type_val) == 21:
+    elif int(probe_type_val) == 2013:
         probe_type = "NP2_kilosortChanMap.mat"
     else:
         raise ValueError(
@@ -49,29 +51,36 @@ def _read_probe_type(meta_file_path: str) -> str:
         )
     return probe_type
 
+
 def _fix_session_ap_metadata(meta_file_path: Path) -> None:
-    """ to inject `fileSizeBytes` and `fileTimeSecs` if they are missing"""
+    """to inject `fileSizeBytes` and `fileTimeSecs` if they are missing"""
     meta = read_metadata(meta_file_path)
     if "fileSizeBytes" not in meta:
-        datafile_path = find_file(meta_file_path.parent, 'ap.bin')[0]
+        datafile_path = find_file(meta_file_path.parent, "ap.bin")[0]
         data_size = os.path.getsize(datafile_path)
         add_entry_to_metadata(meta_file_path, "fileSizeBytes", str(data_size))
-        data_duration = data_size / int(meta['nSavedChans']) / 2 / int(meta["imSampRate"])
+        data_duration = data_size / int(meta["nSavedChans"]) / 2 / int(meta["imSampRate"])
         add_entry_to_metadata(meta_file_path, "fileTimeSecs", str(data_duration))
-        logger.warning(f"AP Metadata missing values: Injected fileSizeBytes: {data_size} and fileTimeSecs: {data_duration}")
+        logger.warning(
+            f"AP Metadata missing values: Injected fileSizeBytes: {data_size} and fileTimeSecs: {data_duration}"
+        )
         _fix_session_lf_metadata(meta_file_path)
 
+
 def _fix_session_lf_metadata(meta_ap_path: Path) -> None:
-    """ to inject `fileSizeBytes` and `fileTimeSecs` to the LFP metadata, if they are missing"""
+    """to inject `fileSizeBytes` and `fileTimeSecs` to the LFP metadata, if they are missing"""
     meta_file_path = meta_ap_path.parent / (meta_ap_path.stem.replace("ap", "lf") + ".meta")
     meta = read_metadata(meta_file_path)
     if "fileSizeBytes" not in meta:
-        datafile_path = find_file(meta_file_path.parent, 'lf.bin')[0]
+        datafile_path = find_file(meta_file_path.parent, "lf.bin")[0]
         data_size = os.path.getsize(datafile_path)
         add_entry_to_metadata(meta_file_path, "fileSizeBytes", str(data_size))
-        data_duration = data_size / int(meta['nSavedChans']) / 2 / int(meta["imSampRate"])
+        data_duration = data_size / int(meta["nSavedChans"]) / 2 / int(meta["imSampRate"])
         add_entry_to_metadata(meta_file_path, "fileTimeSecs", str(data_duration))
-        logger.warning(f"LFP Metadata missing values: Injected fileSizeBytes: {data_size} and fileTimeSecs: {data_duration}")
+        logger.warning(
+            f"LFP Metadata missing values: Injected fileSizeBytes: {data_size} and fileTimeSecs: {data_duration}"
+        )
+
 
 def run_kilosort_on_stream(
     config: Config,
@@ -120,7 +129,6 @@ def run_kilosort_on_stream(
         # Sometimes the gateway can throw an error so just double check.
         download_probes()
 
-    
     # Check if the metadata file is complete
     # when SpikeGLX crashes, metadata misses some values.
     _fix_session_ap_metadata(meta_file_path)
@@ -191,9 +199,7 @@ def run_kilosort_on_session(session_path: Path) -> None:
     if isinstance(session_path, str):
         session_path = Path(session_path)
 
-    kilosort_output_folders = config.get_subdirectories_from_pattern(
-        session_path, "*_ksort"
-    )
+    kilosort_output_folders = config.get_subdirectories_from_pattern(session_path, "*_ksort")
 
     if not any(session_path.rglob("*.bin")):
         logger.warning(
@@ -204,9 +210,7 @@ def run_kilosort_on_session(session_path: Path) -> None:
         logger.warning(f"Kilosort output already exists. Skipping kilosort call")
 
     else:
-        ephys_recording_folders = config.get_subdirectories_from_pattern(
-            session_path, "*_g?"
-        )
+        ephys_recording_folders = config.get_subdirectories_from_pattern(session_path, "*_g?")
         # Check kilosort is installed in environment
         if torch.cuda.is_available():
             logger.info(f"CUDA is available. GPU device: {torch.cuda.get_device_name(0)}")
