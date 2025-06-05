@@ -6,9 +6,8 @@ import torch
 from kilosort import run_kilosort
 from kilosort.utils import PROBE_DIR, download_probes
 
-from bnd import set_logging
-from bnd.config import Config, _load_config
-
+from ..logger import set_logging
+from ..config import Config, _load_config
 from ..config import find_file
 
 logger = set_logging(__name__)

@@ -3,8 +3,8 @@ import subprocess
 import warnings
 from pathlib import Path
 
-from bnd import set_logging
-from bnd.config import _load_config
+from .logger import set_logging
+from .config import _load_config
 
 logger = set_logging(__name__)
 
