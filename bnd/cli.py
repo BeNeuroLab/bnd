@@ -61,7 +61,7 @@ def to_pyal(
         `bnd to-pyal M037_2024_01_01_10_00 -c  # Uses custom mapping
     """
     _check_processing_dependencies()
-    from bnd.pipeline.pyaldata import run_pyaldata_conversion
+    from .pipeline.pyaldata import run_pyaldata_conversion
 
     # Load config and get session path
     config = _load_config()
