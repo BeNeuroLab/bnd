@@ -12,7 +12,7 @@ from neuroconv.tools.signal_processing import get_rising_frames_from_ttl
 from neuroconv.utils import DeepDict
 from pynwb import NWBFile
 
-from bnd import set_logging
+from ..logger import set_logging
 
 logger = set_logging(__name__)
 
