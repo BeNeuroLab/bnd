@@ -83,21 +83,41 @@ class PyControlInterface(BaseTemporalAlignmentInterface):
         for k in self.session.analog_data.keys():
             self.session.analog_data[k][:, 0] -= start_time
 
-    def _get_pos_timestamps(self) -> np.ndarray:
-        time_x = self.session.analog_data["MotSen1-X"][:, 0]
-        time_y = self.session.analog_data["MotSen1-Y"][:, 0]
+    def _get_pos_timestamps_data(self, motion_sensor: str) -> np.ndarray:
+        """Get motion sensore data and timestamptes
 
-        assert len(time_x) == len(time_y)
-        assert np.all(time_x == time_y)
+        Parameters
+        ----------
+        motion_sensor : str
+            Name of motion sensore x or y (e.g., "MotSen1-X" or ""MotSen1-y")
 
-        return time_x
+        Returns
+        -------
+        time : np.ndarray
+        data : np.ndarray
+        """
+        if motion_sensor not in ["MotSen1-X", "MotSen1-Y"]:
+            raise ValueError(
+                f"motion sensor: {motion_sensor} not a valid option (['MotSen1-X', 'MotSen1-Y'])"
+            )
 
-    def _get_pos_data(self) -> np.ndarray:
-        data_x = self.session.analog_data["MotSen1-X"][:, 1]
-        data_y = self.session.analog_data["MotSen1-Y"][:, 1]
-        pos_data = np.stack([data_x, data_y]).T
+        time, data = self.session.analog_data[f"{motion_sensor}"][:, [0, 1]].T
+        return time, data
 
-        return pos_data
+    def _get_spatial_series(self, motion_sensor: str):
+        if motion_sensor not in ["MotSen1-X", "MotSen1-Y"]:
+            raise ValueError(
+                f"motion sensor: {motion_sensor} not a valid option (['MotSen1-X', 'MotSen1-Y'])"
+            )
+        time, data = self._get_pos_timestamps_data(motion_sensor)
+        spatial_series_obj = SpatialSeries(
+            name=f"{motion_sensor}",
+            description=f"Ball position as measured by PyControl ({motion_sensor})",
+            data=data,
+            timestamps=time.astype(float),
+            reference_frame="(0,0) is what?",  # TODO
+        )
+        return spatial_series_obj
 
     def _add_to_behavior_module(self, beh_obj, nwbfile: NWBFile) -> None:
         # behavior_module = nwbfile.processing.get(
@@ -114,15 +134,19 @@ class PyControlInterface(BaseTemporalAlignmentInterface):
         behavior_module.add(beh_obj)
 
     def add_position(self, nwbfile: NWBFile) -> None:
-        spatial_series_obj = SpatialSeries(
-            name="Ball position",
-            description="(x,y) position as measured by PyControl",
-            data=self._get_pos_data(),
-            timestamps=self._get_pos_timestamps().astype(float),
-            reference_frame="(0,0) is what?",  # TODO
-        )
 
-        self._add_to_behavior_module(Position(spatial_series=spatial_series_obj), nwbfile)
+        spatial_series_obj_motion_sensor_x = self._get_spatial_series("MotSen1-X")
+        spatial_series_obj_motion_sensor_y = self._get_spatial_series("MotSen1-Y")
+
+        self._add_to_behavior_module(
+            Position(
+                spatial_series=[
+                    spatial_series_obj_motion_sensor_x,
+                    spatial_series_obj_motion_sensor_y,
+                ]
+            ),
+            nwbfile,
+        )
 
     def add_print_events(self, nwbfile: NWBFile):
         print_events = BehavioralEvents(name="print_events")
@@ -202,7 +226,7 @@ class PyControlInterface(BaseTemporalAlignmentInterface):
         try:
             self.add_position(nwbfile)
         except Exception as e:
-            logger.warning(f"Error parsing motion sensores: {e}")
+            logger.warning(f"Error parsing motion sensors: {e}")
 
     def get_metadata(self) -> DeepDict:
         metadata = DeepDict()
