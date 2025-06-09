@@ -61,7 +61,7 @@ def to_pyal(
         `bnd to-pyal M037_2024_01_01_10_00 -c  # Uses custom mapping
     """
     _check_processing_dependencies()
-    from bnd.pipeline.pyaldata import run_pyaldata_conversion
+    from .pipeline.pyaldata import run_pyaldata_conversion
 
     # Load config and get session path
     config = _load_config()
@@ -105,7 +105,7 @@ def to_nwb(
     """
     # TODO: Add channel map argument: no-map, default-map, custom-map
     # _check_processing_dependencies()
-    from bnd.pipeline.nwb import run_nwb_conversion
+    from .pipeline.nwb import run_nwb_conversion
 
     config = _load_config()
     session_path = config.get_local_session_path(session_name)
@@ -129,7 +129,7 @@ def ksort(session_name: str = typer.Argument(help="Session name to kilosort")) -
     """
     # this will throw an error if the dependencies are not available
     _check_processing_dependencies()
-    from bnd.pipeline.kilosort import run_kilosort_on_session
+    from .pipeline.kilosort import run_kilosort_on_session
 
     config = _load_config()
     session_path = config.get_local_session_path(session_name)
