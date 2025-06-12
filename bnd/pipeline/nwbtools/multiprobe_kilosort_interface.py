@@ -156,9 +156,7 @@ def _try_loading_trajectory_file(session_path: Path) -> dict | None:
                 )
                 return
 
-        trajectory_dict = {
-            probe: trajectory for probe, trajectory in probe_trajectory_pairs
-        }
+        trajectory_dict = {probe: trajectory for probe, trajectory in probe_trajectory_pairs}
 
     return trajectory_dict
 
@@ -360,8 +358,8 @@ class MultiProbeKiloSortInterface(KiloSortSortingInterface):
 
             if probe.get_shank_count() == 1:  # Set shank ids
                 probe.set_shank_ids(np.full((probe.get_contact_count(),), 1))
-            else:
-                raise NotImplementedError("Multishank probes not yet implemented")
+            # else:
+            #     raise NotImplementedError("Multishank probes not yet implemented")
 
             nwbfile.create_device(
                 name=probe_name,
@@ -498,10 +496,7 @@ class MultiProbeKiloSortInterface(KiloSortSortingInterface):
             )
             for unit_id in sorting_extractor.get_unit_ids():
                 # Special condition for wrapping electrode group pointers to actual object ids rather than string names
-                if (
-                    metadata_column["name"] == "electrode_group"
-                    and nwbfile.electrode_groups
-                ):
+                if metadata_column["name"] == "electrode_group" and nwbfile.electrode_groups:
                     value = nwbfile.electrode_groups[
                         sorting_interface.sorting_extractor.get_unit_property(
                             unit_id=unit_id, property_name="electrode_group"
