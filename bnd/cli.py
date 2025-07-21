@@ -3,9 +3,8 @@ from pathlib import Path
 from typing import List
 
 import typer
-from typing_extensions import Annotated
-
 from rich import print
+from typing_extensions import Annotated
 
 from .config import (
     _check_is_git_track,
@@ -45,6 +44,9 @@ def to_pyal(
         "--custom-map/--default-map",
         help="Run conversion with a custom map (-c) or the not (-C)",
     ),
+    lfp: bool = typer.Option(
+        False, "-l/-L", "--add-lfp/--dont-add-lfp", help="Adds lfp data from npx to dataframe"
+    ),
 ) -> None:
     """
     Convert session data into a pyaldata dataframe and saves it as a .mat
@@ -71,7 +73,7 @@ def to_pyal(
     _check_session_directory(session_path)
 
     # Run pipeline
-    run_pyaldata_conversion(session_path, kilosort_flag, custom_map)
+    run_pyaldata_conversion(session_path, kilosort_flag, custom_map, lfp)
 
     return
 

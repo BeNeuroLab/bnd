@@ -4,17 +4,19 @@ from pathlib import Path
 import numpy as np
 from rich import print
 
-from ..logger import set_logging
 from ..config import _load_config
+from ..logger import set_logging
 from .kilosort import run_kilosort_on_session
 from .nwbtools.anipose_interface import AniposeInterface
 from .nwbtools.beneuro_converter import BeNeuroConverter
-from .nwbtools.multiprobe_kilosort_interface import (
-    MultiProbeKiloSortInterface,
-)
+from .nwbtools.multiprobe_kilosort_interface import MultiProbeKiloSortInterface
 
 logger = set_logging(__name__)
 config = _load_config()
+
+
+def _try_adding_npx_lfp_to_source_data():
+    return
 
 
 def _try_adding_kilosort_to_source_data(
@@ -97,7 +99,7 @@ def _try_adding_anipose_to_source_data(source_data: dict, session_path: Path):
         )
 
 
-def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool):
+def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool, lfp: bool):
     logger.info(f"Running nwb conversion on session: {session_path.name}")
 
     # TODO: Throw question on which recording to use if it finds many
@@ -118,7 +120,7 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
             .lower()
         )
         if "y" not in response:
-            logger.warning(f"Aborting nwb conversion")
+            logger.warning("Aborting nwb conversion")
             return
         else:
             os.remove(nwb_file_output_path)
@@ -133,6 +135,9 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
             "file_path": str(session_path),
         },
     )
+
+    if lfp:
+        _try_adding_npx_lfp_to_source_data()
 
     recording_to_process = _try_adding_kilosort_to_source_data(
         source_data, session_path, custom_map
