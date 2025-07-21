@@ -93,6 +93,9 @@ def to_nwb(
         "--custom-map/--default-map",
         help="Run conversion with a custom map (-c) or the not (-C)",
     ),
+    lfp: bool = typer.Option(
+        False, "-l/-L", "--add-lfp/--dont-add-lfp", help="Adds lfp data from npx to dataframe"
+    ),
 ) -> None:
     """
     Convert session data into a nwb file and saves it as a .nwb
@@ -116,7 +119,7 @@ def to_nwb(
     _check_session_directory(session_path)
 
     # Run pipeline
-    run_nwb_conversion(session_path, kilosort_flag, custom_map)
+    run_nwb_conversion(session_path, kilosort_flag, custom_map, lfp)
     return
 
 

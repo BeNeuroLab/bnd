@@ -10,7 +10,7 @@ from .kilosort import run_kilosort_on_session
 from .nwbtools.anipose_interface import AniposeInterface
 from .nwbtools.beneuro_converter import BeNeuroConverter
 from .nwbtools.multiprobe_kilosort_interface import MultiProbeKiloSortInterface
-from .nwbtools.multiprobe_lfp_interface import MultiProbeLFPInterface
+from .nwbtools.multiprobe_lfp_interface import MultiProbeNpxLFPInterface
 
 logger = set_logging(__name__)
 config = _load_config()
@@ -47,13 +47,13 @@ def _try_adding_npx_lfp_to_source_data(source_data: dict, session_path: Path) ->
     ephys_folder_path = _select_folder_from_multiple(ephys_folders)
 
     try:
-        MultiProbeLFPInterface(ephys_folder_path)
+        MultiProbeNpxLFPInterface(ephys_folder_path)
     except Exception as e:
         logger.warning(f"Problem loading lfp data data: {str(e)}")
     else:
         source_data.update(
             LFP={
-                "ephys_folder_path": str(ephys_folder_path),
+                "ephys_folder_path": ephys_folder_path,
             }
         )
 
@@ -88,19 +88,19 @@ def _try_adding_kilosort_to_source_data(
             ksorted_folder_path = ksorted_folders[0]
 
         # Attempt to wrap interface
-        try:
-            MultiProbeKiloSortInterface(ksorted_folder_path, custom_map)
-            source_data.update(
-                Kilosort={
-                    "ksorted_folder_path": ksorted_folder_path,  # For neuroconv consistency
-                    "custom_map": custom_map,
-                }
-            )
-            return int(user_input) if len(ksorted_folders) > 1 else None
+        # try:
+        MultiProbeKiloSortInterface(ksorted_folder_path, custom_map)
+        source_data.update(
+            Kilosort={
+                "ksorted_folder_path": ksorted_folder_path,  # For neuroconv consistency
+                "custom_map": custom_map,
+            }
+        )
+        return int(user_input) if len(ksorted_folders) > 1 else None
 
         # warn if we can't read it
-        except Exception as e:
-            logger.warning(f"Problem loading Kilosort data: {str(e)}")
+        # except Exception as e:
+        # logger.warning(f"Problem loading Kilosort data: {str(e)}")
 
     elif len(config.get_subdirectories_from_pattern(session_path, "*_g?")) > 0:
         # if there's no kilosort output found,

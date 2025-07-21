@@ -10,6 +10,7 @@ from ...config import _load_config
 from ...logger import set_logging
 from .anipose_interface import AniposeInterface
 from .multiprobe_kilosort_interface import MultiProbeKiloSortInterface
+from .multiprobe_lfp_interface import MultiProbeNpxLFPInterface
 from .pycontrol_interface import PyControlInterface
 
 logger = set_logging(__name__)
@@ -78,6 +79,7 @@ class BeNeuroConverter(NWBConverter):
         "Kilosort": MultiProbeKiloSortInterface,
         "PyControl": PyControlInterface,
         "Anipose": AniposeInterface,
+        "LFP": MultiProbeNpxLFPInterface,
     }
 
     def __init__(self, source_data, recording_to_process=None, verbose=True):
