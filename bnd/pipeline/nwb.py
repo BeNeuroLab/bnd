@@ -4,18 +4,59 @@ from pathlib import Path
 import numpy as np
 from rich import print
 
-from ..config import _load_config
+from ..config import _load_config, find_file
 from ..logger import set_logging
 from .kilosort import run_kilosort_on_session
 from .nwbtools.anipose_interface import AniposeInterface
 from .nwbtools.beneuro_converter import BeNeuroConverter
 from .nwbtools.multiprobe_kilosort_interface import MultiProbeKiloSortInterface
+from .nwbtools.multiprobe_lfp_interface import MultiProbeLFPInterface
 
 logger = set_logging(__name__)
 config = _load_config()
 
 
-def _try_adding_npx_lfp_to_source_data():
+def _select_folder_from_multiple(folders):
+    if len(folders) > 1:
+        while True:
+            user_input = input(
+                f"Found {len(folders)} recordings. Please select one {np.arange(len(folders))}. Default [1]: "
+            )
+            if "y" in user_input.lower():
+                user_input = 1
+            try:
+                folder = folders[int(user_input)]
+                break
+            except Exception as e:
+                print(f"Invalid input: {e}. Enter a valid integer")
+
+    elif len(folders) == 1:
+        folder = folders[0]
+
+    return folder
+
+
+def _try_adding_npx_lfp_to_source_data(source_data: dict, session_path: Path) -> None:
+
+    lfp_files = find_file(session_path, ".lf.bin")
+    if not lfp_files:
+        logger.warning("No LFP files found in session")
+        return
+
+    ephys_folders = config.get_subdirectories_from_pattern(session_path, "*_g?")
+    ephys_folder_path = _select_folder_from_multiple(ephys_folders)
+
+    try:
+        MultiProbeLFPInterface(ephys_folder_path)
+    except Exception as e:
+        logger.warning(f"Problem loading lfp data data: {str(e)}")
+    else:
+        source_data.update(
+            LFP={
+                "ephys_folder_path": str(ephys_folder_path),
+            }
+        )
+
     return
 
 
@@ -48,7 +89,6 @@ def _try_adding_kilosort_to_source_data(
 
         # Attempt to wrap interface
         try:
-            # TODO: Add custom map options
             MultiProbeKiloSortInterface(ksorted_folder_path, custom_map)
             source_data.update(
                 Kilosort={
@@ -74,7 +114,7 @@ def _try_adding_kilosort_to_source_data(
     return
 
 
-def _try_adding_anipose_to_source_data(source_data: dict, session_path: Path):
+def _try_adding_anipose_to_source_data(source_data: dict, session_path: Path) -> None:
     csv_paths = list(session_path.glob("**/*3dpts_angles.csv"))
 
     if len(csv_paths) == 0:
@@ -97,6 +137,7 @@ def _try_adding_anipose_to_source_data(source_data: dict, session_path: Path):
                 "csv_path": str(csv_path),
             }
         )
+    return
 
 
 def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool, lfp: bool):
@@ -136,13 +177,13 @@ def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool
         },
     )
 
-    if lfp:
-        _try_adding_npx_lfp_to_source_data()
-
     recording_to_process = _try_adding_kilosort_to_source_data(
         source_data, session_path, custom_map
     )
     _try_adding_anipose_to_source_data(source_data, session_path)
+
+    if lfp:
+        _try_adding_npx_lfp_to_source_data(source_data, session_path)
 
     converter = BeNeuroConverter(source_data, recording_to_process, verbose=False)
 
