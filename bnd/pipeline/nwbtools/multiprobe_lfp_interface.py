@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Literal, Optional
 
 from neuroconv.datainterfaces import SpikeGLXRecordingInterface
-from neuroconv.tools.spikeinterface import _stub_recording, add_recording_to_nwbfile
+from neuroconv.tools.spikeinterface import add_recording_to_nwbfile
 from neuroconv.utils import DeepDict
 from pynwb import NWBFile
 
@@ -35,7 +35,7 @@ class MultiProbeNpxLFPInterface(SpikeGLXRecordingInterface):
         self.probe_folder_paths = sorted(
             config.get_subdirectories_from_pattern(self.ephys_folder_path, "*imec*")
         )
-        self.spike_glx_interfaces = [
+        self.spikeglx_lfp_interfaces = [
             SpikeGLXRecordingInterface(
                 folder_path=str(folder_path),
                 stream_id=f"{folder_path.name[-5:]}.lf",
@@ -83,12 +83,9 @@ class MultiProbeNpxLFPInterface(SpikeGLXRecordingInterface):
             _description_, by default False
         """
         for spike_glx_interface, probe_folder_path in zip(
-            self.spike_glx_interfaces, self.probe_folder_paths
+            self.spikeglx_lfp_interfaces, self.probe_folder_paths
         ):
             recording = spike_glx_interface.recording_extractor
-
-            if stub_test:
-                recording = _stub_recording(recording=recording)
 
             metadata = metadata or spike_glx_interface.get_metadata()
             metadata["Ecephys"][spike_glx_interface.es_key] = dict(

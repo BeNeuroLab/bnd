@@ -44,6 +44,24 @@ def chunked_first_rise(memmap_array: np.memmap, chunk_size: int = 1_000):
     return -1
 
 
+def get_first_rise_seconds(spikeglx_output_folder_path, stream_name):
+    rec_with_sync_channel = se.read_spikeglx(
+        spikeglx_output_folder_path,  # Used to be raw_session_path
+        stream_name=stream_name,
+        load_sync_channel=True,
+    )
+
+    # Find the first rising edge without having to read the
+    # whole array first, which can be time consuming in my experience
+    first_rising_frame = chunked_first_rise(
+        rec_with_sync_channel.get_traces()[1:, -1], chunk_size=1_000
+    )
+    first_rise_seconds = first_rising_frame / rec_with_sync_channel.sampling_frequency
+    rec_start_time = rec_with_sync_channel.get_start_time()
+
+    return first_rise_seconds, rec_start_time
+
+
 class BeNeuroConverter(NWBConverter):
     """
     Converter class for data from the BeNeuro.Lab
@@ -86,7 +104,19 @@ class BeNeuroConverter(NWBConverter):
         super().__init__(source_data, verbose)
         self.recording_to_process = recording_to_process
 
-    # logger.info("Extracted available interfaces")
+    def get_recording_folder_path(self, spikeglx_output_folder_paths):
+
+        if len(spikeglx_output_folder_paths) > 1:
+            assert self.recording_to_process is not None
+            spikeglx_output_folder_path = spikeglx_output_folder_paths[
+                self.recording_to_process
+            ]
+        elif len(spikeglx_output_folder_paths) == 1:
+            spikeglx_output_folder_path = spikeglx_output_folder_paths[0]
+        else:
+            raise ValueError("No recording folder found")
+
+        return spikeglx_output_folder_path
 
     def temporally_align_data_interfaces(self):
         adjusting_times = {}
@@ -111,14 +141,9 @@ class BeNeuroConverter(NWBConverter):
             spikeglx_output_folder_path = config.get_subdirectories_from_pattern(
                 raw_session_path, "*_g?"
             )
-
-            if len(spikeglx_output_folder_path) > 1:
-                assert self.recording_to_process is not None
-                spikeglx_output_folder_path = spikeglx_output_folder_path[
-                    self.recording_to_process
-                ]
-            elif len(spikeglx_output_folder_path) == 1:
-                spikeglx_output_folder_path = spikeglx_output_folder_path[0]
+            spikeglx_output_folder_path = self.get_recording_folder_path(
+                spikeglx_output_folder_path
+            )
 
             for probe_name, kilosort_interface in zip(
                 multikilo.probe_names, multikilo.kilosort_interfaces
@@ -145,19 +170,9 @@ class BeNeuroConverter(NWBConverter):
 
                 # this is used to get the sync channel's values
                 # and figure out when the first rising edge is
-                rec_with_sync_channel = se.read_spikeglx(
-                    spikeglx_output_folder_path,  # Used to be raw_session_path
+                first_rise_seconds, _ = get_first_rise_seconds(
+                    spikeglx_output_folder_path=spikeglx_output_folder_path,
                     stream_name=f"{probe_name}.ap",
-                    load_sync_channel=True,
-                )
-
-                # Find the first rising edge without having to read the
-                # whole array first, which can be time consuming in my experience
-                first_rising_frame = chunked_first_rise(
-                    rec_with_sync_channel.get_traces()[1:, -1], chunk_size=1_000
-                )
-                first_rise_seconds = (
-                    first_rising_frame / rec_with_sync_channel.sampling_frequency
                 )
 
                 # first_rise_seconds is when the clock starts, so this times -1
@@ -165,5 +180,34 @@ class BeNeuroConverter(NWBConverter):
                 kilosort_interface.set_aligned_starting_time(-first_rise_seconds)
 
                 adjusting_times[f"Kilosort {probe_name}"] = first_rise_seconds * 1000
+
+        if "LFP" in self.data_interface_objects:
+            multilfp = self.data_interface_objects["LFP"]
+
+            raw_session_path = Path(
+                self.data_interface_objects["PyControl"].source_data["file_path"]
+            )
+            spikeglx_output_folder_path = config.get_subdirectories_from_pattern(
+                raw_session_path, "*_g?"
+            )
+            spikeglx_output_folder_path = self.get_recording_folder_path(
+                spikeglx_output_folder_path
+            )
+
+            for probe_name, spikeglx_lfp_interfaces in zip(
+                multilfp.probe_names, multilfp.spikeglx_lfp_interfaces
+            ):
+                first_rise_seconds, start_time = get_first_rise_seconds(
+                    spikeglx_output_folder_path=spikeglx_output_folder_path,
+                    stream_name=f"{probe_name}.lf",
+                )
+
+                # Need to remove also the recording start time because we
+                # are taking directly the spike glx interfaces
+                spikeglx_lfp_interfaces.set_aligned_starting_time(
+                    -first_rise_seconds - start_time
+                )
+
+                adjusting_times[f"LFP {probe_name}"] = first_rise_seconds * 1000
 
         logger.info(f"Interface adjusted with time values: {adjusting_times}")
