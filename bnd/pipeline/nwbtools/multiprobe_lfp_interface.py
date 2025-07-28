@@ -35,6 +35,7 @@ class MultiProbeNpxLFPInterface(SpikeGLXRecordingInterface):
         self.probe_folder_paths = sorted(
             config.get_subdirectories_from_pattern(self.ephys_folder_path, "*imec*")
         )
+        self.probe_names = [folder.name[-5:] for folder in self.probe_folder_paths]
         self.spikeglx_lfp_interfaces = [
             SpikeGLXRecordingInterface(
                 folder_path=str(folder_path),

@@ -193,7 +193,6 @@ class BeNeuroConverter(NWBConverter):
             spikeglx_output_folder_path = self.get_recording_folder_path(
                 spikeglx_output_folder_path
             )
-
             for probe_name, spikeglx_lfp_interfaces in zip(
                 multilfp.probe_names, multilfp.spikeglx_lfp_interfaces
             ):
