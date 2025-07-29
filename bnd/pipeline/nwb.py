@@ -16,7 +16,19 @@ logger = set_logging(__name__)
 config = _load_config()
 
 
-def _select_folder_from_multiple(folders):
+def _select_folder_from_multiple(folders: list[Path]) -> Path:
+    """Selects one recording folder from many by prompting the use
+
+    Parameters
+    ----------
+    folders : list[Path]
+        list of path objects
+
+    Returns
+    -------
+    Path
+        selected folder
+    """
     if len(folders) > 1:
         while True:
             user_input = input(
@@ -37,6 +49,15 @@ def _select_folder_from_multiple(folders):
 
 
 def _try_adding_npx_lfp_to_source_data(source_data: dict, session_path: Path) -> None:
+    """Tries to add lfp interfaces
+
+    Parameters
+    ----------
+    source_data : dict
+        dictionary of interfaces
+    session_path : Path
+        path to session folder
+    """
 
     lfp_files = find_file(session_path, ".lf.bin")
     if not lfp_files:
@@ -63,6 +84,17 @@ def _try_adding_npx_lfp_to_source_data(source_data: dict, session_path: Path) ->
 def _try_adding_kilosort_to_source_data(
     source_data: dict, session_path: Path, custom_map: bool
 ) -> None:
+    """Tries to initialize kilosort interface
+
+    Parameters
+    ----------
+    source_data : dict
+        dictionary of interfaces
+    session_path : Path
+        path to sesison folder
+    custom_map : bool
+        to use custom map or not
+    """
     if any(session_path.glob("**/spike_times.npy")) and any(
         config.get_subdirectories_from_pattern(session_path, "*_ksort")
     ):
@@ -115,6 +147,20 @@ def _try_adding_kilosort_to_source_data(
 
 
 def _try_adding_anipose_to_source_data(source_data: dict, session_path: Path) -> None:
+    """Checks if anipose source data is available
+
+    Parameters
+    ----------
+    source_data : dict
+        dictionary of interfaces
+    session_path : Path
+        path to session folder
+
+    Raises
+    ------
+    FileExistsError
+        more than one csv file found
+    """
     csv_paths = list(session_path.glob("**/*3dpts_angles.csv"))
 
     if len(csv_paths) == 0:
@@ -140,7 +186,22 @@ def _try_adding_anipose_to_source_data(source_data: dict, session_path: Path) ->
     return
 
 
-def run_nwb_conversion(session_path: Path, kilosort_flag: bool, custom_map: bool, lfp: bool):
+def run_nwb_conversion(
+    session_path: Path, kilosort_flag: bool, custom_map: bool, lfp: bool
+) -> None:
+    """Runs main nwb conversion routing
+
+    Parameters
+    ----------
+    session_path : Path
+        path to session folder
+    kilosort_flag : bool
+        to kilosort or not
+    custom_map : bool
+        to use custom map or not
+    lfp : bool
+        to fetch lfps or not
+    """
     logger.info(f"Running nwb conversion on session: {session_path.name}")
 
     # TODO: Throw question on which recording to use if it finds many

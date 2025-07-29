@@ -44,7 +44,21 @@ def chunked_first_rise(memmap_array: np.memmap, chunk_size: int = 1_000):
     return -1
 
 
-def get_first_rise_seconds(spikeglx_output_folder_path, stream_name):
+def get_first_rise_seconds(spikeglx_output_folder_path: Path, stream_name: str) -> tuple:
+    """Get the first rising edge from the spike glx recording
+
+    Parameters
+    ----------
+    spikeglx_output_folder_path : Path
+        path to spikeglx output
+    stream_name : str
+        'imec0' or 'imec1
+
+    Returns
+    -------
+    tuple
+        rising edge in seconds and recording start time
+    """
     rec_with_sync_channel = se.read_spikeglx(
         spikeglx_output_folder_path,  # Used to be raw_session_path
         stream_name=stream_name,
@@ -97,7 +111,7 @@ class BeNeuroConverter(NWBConverter):
         "Kilosort": MultiProbeKiloSortInterface,
         "PyControl": PyControlInterface,
         "Anipose": AniposeInterface,
-        "LFP": MultiProbeNpxLFPInterface,
+        "SpikeGlxLFP": MultiProbeNpxLFPInterface,
     }
 
     def __init__(self, source_data, recording_to_process=None, verbose=True):
@@ -181,8 +195,8 @@ class BeNeuroConverter(NWBConverter):
 
                 adjusting_times[f"Kilosort {probe_name}"] = first_rise_seconds * 1000
 
-        if "LFP" in self.data_interface_objects:
-            multilfp = self.data_interface_objects["LFP"]
+        if "SpikeGlxLFP" in self.data_interface_objects:
+            multilfp = self.data_interface_objects["SpikeGlxLFP"]
 
             raw_session_path = Path(
                 self.data_interface_objects["PyControl"].source_data["file_path"]
@@ -207,6 +221,6 @@ class BeNeuroConverter(NWBConverter):
                     -first_rise_seconds - start_time
                 )
 
-                adjusting_times[f"LFP {probe_name}"] = first_rise_seconds * 1000
+                adjusting_times[f"SpikeGlxLFP {probe_name}"] = first_rise_seconds * 1000
 
         logger.info(f"Interface adjusted with time values: {adjusting_times}")

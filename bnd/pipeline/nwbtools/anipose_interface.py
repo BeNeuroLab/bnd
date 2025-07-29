@@ -8,7 +8,6 @@ import pandas as pd
 import spikeinterface.extractors as se
 from ndx_pose import PoseEstimation, PoseEstimationSeries
 from neuroconv.basetemporalalignmentinterface import BaseTemporalAlignmentInterface
-from neuroconv.tools.signal_processing import get_rising_frames_from_ttl
 from neuroconv.utils import DeepDict
 from pynwb import NWBFile
 
