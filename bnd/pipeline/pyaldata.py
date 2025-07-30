@@ -12,8 +12,8 @@ from pynwb import NWBHDF5IO
 from pynwb.behavior import SpatialSeries
 from pynwb.misc import Units
 
-from ..logger import set_logging
 from ..config import _load_config
+from ..logger import set_logging
 from ..pipeline.nwb import run_nwb_conversion
 
 logger = set_logging(__name__)
@@ -212,7 +212,7 @@ def _parse_pynwb_probe(
         brain_area_spikes_and_chan_best[brain_area.replace("-", "_")][
             "unit_guide"
         ] = unit_guide
-        brain_area_spikes_and_chan_best[brain_area.replace("-", "_")]["KSLabel"] = (
+        brain_area_spikes_and_chan_best[brain_area.replace("-", "_")]["kslabel"] = (
             probe_units.KSLabel[brain_area_neurons][sorted_chan_best_indices]
         )
 
@@ -662,8 +662,8 @@ class ParsedNWBFile:
                     ] * len(self.pyaldata_df)
 
                     # Add kilosort labels
-                    self.pyaldata_df[f"{brain_area_key}_KSLabel"] = [
-                        brain_area_spike_data["KSLabel"]
+                    self.pyaldata_df[f"{brain_area_key}_kslabel"] = [
+                        brain_area_spike_data["kslabel"]
                     ] * len(self.pyaldata_df)
 
                     self.pyaldata_df[f"{brain_area_key}_spikes"] = np.nan
