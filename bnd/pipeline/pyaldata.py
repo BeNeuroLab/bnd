@@ -219,6 +219,17 @@ def _parse_pynwb_probe(
     return brain_area_spikes_and_chan_best
 
 
+def _parse_pynwb_electrical_series(probe_name: str, electrode_info) -> dict:
+
+    electrode_info_df = electrode_info.to_dataframe()
+    probe_electrode_locations_df = electrode_info_df[
+        electrode_info_df["group_name"] == probe_units.name.split("_")[-1]
+    ]
+    breakpoint()
+
+    return
+
+
 def _parse_pose_estimation_series(
     pose_est_series: PoseEstimationSeries,
 ) -> pd.DataFrame:
@@ -395,6 +406,9 @@ class ParsedNWBFile:
                     # If there is a ephys processing module we assume there is spiking data
                     self.parse_spike_data()
 
+                    # Try to parse lfps
+                    self.parse_spikeglx_lfp_data()
+
             else:
                 logger.warning(
                     f"NWBFile {self.nwbfile.processing.keys()} does not have {processing_key}"
@@ -533,14 +547,29 @@ class ParsedNWBFile:
 
         logger.info(f"Parsing spiking data. Found probes {list(self.ecephys.keys())}")
         spike_data_dict = {}
+        probe_keys = [key for key in self.ecephys.keys() if key.startswith("units")]
 
-        for probe_units in self.ecephys.keys():
+        for probe_units in probe_keys:
             spike_data_dict[probe_units] = _parse_pynwb_probe(
                 probe_units=self.ecephys[probe_units],
                 electrode_info=self.nwbfile.electrodes,
                 bin_size=self.bin_size,
             )
         self.spike_data = spike_data_dict
+        return
+
+    def parse_spikeglx_lfp_data(self):
+
+        if "SpikeGlxLFP" not in self.ecephys.keys():
+            logger.info("No SpikeGLX LFP data found in nwb file")
+            self.spikeglx_lfp = None
+            return
+
+        spikeglx_data_dict = {}
+        for probe_lfp in self.ecephys["SpikeGlxLFP"].electrical_series.keys():
+            spikeglx_data_dict[probe_lfp] = _parse_pynwb_electrical_series(
+                probe_name=probe_lfp, electrode_info=self.nwbfile.electrodes
+            )
         return
 
     def add_pycontrol_states_to_df(self):
