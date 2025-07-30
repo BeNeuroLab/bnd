@@ -544,10 +544,10 @@ class ParsedNWBFile:
         -------
 
         """
-
-        logger.info(f"Parsing spiking data. Found probes {list(self.ecephys.keys())}")
-        spike_data_dict = {}
         probe_keys = [key for key in self.ecephys.keys() if key.startswith("units")]
+
+        logger.info(f"Parsing spiking data. Found probes {probe_keys}")
+        spike_data_dict = {}
 
         for probe_units in probe_keys:
             spike_data_dict[probe_units] = _parse_pynwb_probe(
