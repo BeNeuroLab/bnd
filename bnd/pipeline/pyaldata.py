@@ -754,10 +754,9 @@ class ParsedNWBFile:
         Drop last column if all spike fields are empty
 
         """
-
         spike_cols = [col for col in self.pyaldata_df.columns if col.endswith("_spikes")]
         final_state = self.pyaldata_df.iloc[-1]
-        all_zero = (final_state[spike_cols].size == 0).all()
+        all_zero = all(final_state[spike_col].size == 0 for spike_col in spike_cols)
 
         if all_zero:
             self.pyaldata_df.drop(self.pyaldata_df.index[-1], inplace=True)
