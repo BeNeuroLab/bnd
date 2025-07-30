@@ -73,7 +73,7 @@ def _try_adding_npx_lfp_to_source_data(source_data: dict, session_path: Path) ->
         logger.warning(f"Problem loading lfp data data: {str(e)}")
     else:
         source_data.update(
-            LFP={
+            SpikeGlxLFP={
                 "ephys_folder_path": ephys_folder_path,
             }
         )

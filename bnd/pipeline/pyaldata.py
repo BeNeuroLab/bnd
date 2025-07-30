@@ -362,15 +362,15 @@ class ParsedNWBFile:
             self.nwbfile = io.read()
 
             # Processing modules
-            self.try_to_parse_processing_module("behavior")
-            self.try_to_parse_processing_module("ecephys")
+            self.try_parsing_processing_module("behavior")
+            self.try_parsing_processing_module("ecephys")
 
             # Initialize Pyaldata dataframe
             self.pyaldata_df = None
 
         logger.info("Parsed NWB file")
 
-    def try_to_parse_processing_module(self, processing_key: str) -> None:
+    def try_parsing_processing_module(self, processing_key: str) -> None:
         """
         Go through nwb processing module and parse 'behavior' and 'ecephys' if they are available
 
@@ -397,7 +397,7 @@ class ParsedNWBFile:
                     self.parse_nwb_pycontrol_events()
 
                     # Also try to add motion sensor data if its available
-                    self.try_to_parse_motion_sensors()
+                    self.try_parsing_motion_sensors()
 
                     # Anipose data
                     self.try_parsing_anipose_output()
@@ -486,7 +486,7 @@ class ParsedNWBFile:
 
         return
 
-    def try_to_parse_motion_sensors(self) -> None:
+    def try_parsing_motion_sensors(self) -> None:
         """
         Add motion data to instance as a x, y array
 
@@ -559,6 +559,8 @@ class ParsedNWBFile:
         return
 
     def parse_spikeglx_lfp_data(self):
+
+        breakpoint()
 
         if "SpikeGlxLFP" not in self.ecephys.keys():
             logger.info("No SpikeGLX LFP data found in nwb file")
