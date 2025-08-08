@@ -89,6 +89,7 @@ class MultiProbeNpxLFPInterface(SpikeGLXRecordingInterface):
             recording = spike_glx_interface.recording_extractor
 
             metadata = metadata or spike_glx_interface.get_metadata()
+            breakpoint()
             metadata["Ecephys"][spike_glx_interface.es_key] = dict(
                 name=f"{probe_folder_path.name[-5:]}",
                 description=f"Npx LFP of probe {probe_folder_path.name[-5:]}",

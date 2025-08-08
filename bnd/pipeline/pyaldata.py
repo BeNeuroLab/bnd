@@ -222,10 +222,10 @@ def _parse_pynwb_probe(
 def _parse_pynwb_electrical_series(probe_name: str, electrode_info) -> dict:
 
     electrode_info_df = electrode_info.to_dataframe()
+
     probe_electrode_locations_df = electrode_info_df[
         electrode_info_df["group_name"] == probe_units.name.split("_")[-1]
     ]
-    breakpoint()
 
     return
 
@@ -559,16 +559,15 @@ class ParsedNWBFile:
         return
 
     def parse_spikeglx_lfp_data(self):
-
         breakpoint()
 
-        if "SpikeGlxLFP" not in self.ecephys.keys():
+        if "LFP" not in self.ecephys.keys():
             logger.info("No SpikeGLX LFP data found in nwb file")
             self.spikeglx_lfp = None
             return
 
         spikeglx_data_dict = {}
-        for probe_lfp in self.ecephys["SpikeGlxLFP"].electrical_series.keys():
+        for probe_lfp in self.ecephys["LFP"].electrical_series.keys():
             spikeglx_data_dict[probe_lfp] = _parse_pynwb_electrical_series(
                 probe_name=probe_lfp, electrode_info=self.nwbfile.electrodes
             )
