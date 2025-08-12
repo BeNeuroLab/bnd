@@ -151,3 +151,59 @@ def download_animal(animal_name: str, file_extension: str, max_size_MB: float = 
     _,session_list = list_session_datetime(remote_animal_path)
     for session_name in session_list:
         download_session(session_name, file_extension, max_size_MB, do_video)
+
+
+def _replace_file(local_file: Path, remote_file: Path):
+    """
+    Replace a file on the remote server, overwriting if it exists.
+    
+    Parameters
+    ----------
+    local_file: Path
+        local path of the file to upload
+    remote_file: Path
+        remote path of the file to upload (will be overwritten if exists)
+    """
+    
+    # Ensure the destination directory exists
+    remote_file.parent.mkdir(parents=True, exist_ok=True)
+    
+    try:
+        shutil.copy2(local_file, remote_file)
+    except PermissionError:
+        shutil.copyfile(local_file, remote_file)
+    
+    logger.info(f'Replaced "{local_file.name}" on server')
+
+
+def replace_processed_files(session_name: str, processed_files: list[Path]) -> None:
+    """
+    Replace specific processed files (.nwb and .mat) on the server.
+    
+    This function will overwrite existing files, unlike the regular upload_session
+    which refuses to overwrite existing files.
+    
+    Parameters
+    ----------
+    session_name: str
+        Name of the session
+    processed_files: list[Path]
+        List of local processed files to replace on server
+    """
+    config = _load_config()
+    
+    uploaded_count = 0
+    
+    for local_file in processed_files:
+        if not local_file.is_file():
+            logger.warning(f"Skipping {local_file.name} - not a file")
+            continue
+            
+        # Convert to remote path
+        remote_file = config.convert_to_remote(local_file)
+        
+        # Replace the file (will overwrite if exists)
+        _replace_file(local_file=local_file, remote_file=remote_file)
+        uploaded_count += 1
+    
+    logger.info(f"Replacement complete. Replaced {uploaded_count} processed files for {session_name}.")

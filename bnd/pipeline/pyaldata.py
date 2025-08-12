@@ -889,7 +889,10 @@ class ParsedNWBFile:
 
 
 def run_pyaldata_conversion(
-    session_path: Path, kilosort_flag: bool, custom_map: bool
+    session_path: Path, 
+    kilosort_flag: bool, 
+    custom_map: bool,
+    validate_spikes: bool = False
 ) -> None:
     """
     Main pyaldata conversion routine. Creates pyaldata file for a specific session. It will
@@ -900,6 +903,10 @@ def run_pyaldata_conversion(
     session_path : Path
     kilosort_flag : bool
         Whether to run kilosort or not. Defaults to True
+    custom_map : bool
+        Whether to use custom channel mapping
+    validate_spikes : bool
+        Whether to validate spike times for alignment issues
 
     Returns
     -------
@@ -912,6 +919,18 @@ def run_pyaldata_conversion(
     if isinstance(session_path, str):
         session_path = Path(session_path)
 
+    # Validate spike times if requested
+    if validate_spikes:
+        from .spike_validation import validate_and_clean_session
+        needs_reconversion = validate_and_clean_session(
+            session_path, 
+            delete_if_no_negative=True
+        )
+        if needs_reconversion:
+            logger.info("Re-running conversion due to alignment issues...")
+            # Files have been deleted, now re-run the conversion
+            run_nwb_conversion(session_path, kilosort_flag, custom_map)
+    
     # Get nwb file
     nwbfile_path = config.get_subdirectories_from_pattern(session_path, "*.nwb")
     if not nwbfile_path:
