@@ -1,12 +1,25 @@
 import platform
+import shutil
 import subprocess
 import warnings
 from pathlib import Path
 
 from .logger import set_logging
-from .config import _load_config
+from .config import _get_package_path
 
 logger = set_logging(__name__)
+
+_REPO_URL = "https://github.com/BeNeuroLab/bnd.git"
+
+
+def _find_repo_path() -> Path | None:
+    """Return the git repo root if bnd was installed from a local clone, else None."""
+    pkg = _get_package_path()
+    # Walk up looking for .git (editable installs live inside the repo)
+    for parent in (pkg, *pkg.parents):
+        if (parent / ".git").is_dir():
+            return parent
+    return None
 
 
 def _run_git_command(repo_path: Path, command: list[str]) -> str:
@@ -73,10 +86,17 @@ def check_for_updates() -> bool:
 
     Returns True if new commits are found, False otherwise.
     """
-    config = _load_config()
-    package_path = config.REPO_PATH
+    repo_path = _find_repo_path()
 
-    new_commits = _get_new_commits(package_path)
+    if repo_path is None:
+        print(
+            "bnd is not installed from a local git clone.\n"
+            "To update, run:\n"
+            f'  pipx install --force "bnd @ git+{_REPO_URL}"'
+        )
+        return False
+
+    new_commits = _get_new_commits(repo_path)
 
     if len(new_commits) > 0:
         print("New commits found, run `bnd self-update` to update the package.")
@@ -86,25 +106,34 @@ def check_for_updates() -> bool:
         return True
 
     print("No new commits found, package is up to date.")
+    return False
 
 
 def update_bnd(print_new_commits: bool = True) -> None:
     """
-    Update bnd if it was installed with conda
+    Update bnd. Uses git pull for editable installs, or pipx reinstall otherwise.
 
     Parameters
     ----------
     print_new_commits
 
     """
-    config = _load_config()
+    repo_path = _find_repo_path()
 
-    new_commits = _get_new_commits(config.REPO_PATH)
+    if repo_path is None:
+        # pipx / pip install — can't reinstall ourselves while running
+        print(
+            "bnd is installed via pipx. To update, run this in your terminal:\n\n"
+            f'  pipx install --force "bnd @ git+{_REPO_URL}"\n'
+        )
+        return
+
+    new_commits = _get_new_commits(repo_path)
 
     if len(new_commits) > 0:
         print("New commits found, pulling changes...")
 
-        _run_git_command(config.REPO_PATH, ["pull", "origin", "main"])
+        _run_git_command(repo_path, ["pull", "origin", "main"])
 
         print(1 * "\n")
         print("Package updated successfully.")

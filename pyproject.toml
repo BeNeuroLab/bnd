@@ -1,0 +1,60 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bnd"
+version = "0.1.0"
+description = "BeNeuro data pipeline CLI"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    # -- CLI (lightweight base) ----------------------------------------------
+    "typer>=0.9",
+    "rich",
+    "typing_extensions",
+]
+
+[project.optional-dependencies]
+processing = [
+    # -- data I/O & NWB ------------------------------------------------------
+    "pynwb>=2.5",
+    "ndx-pose",
+    "neuroconv~=0.6.0",
+    "h5py",
+
+    # -- electrophysiology ---------------------------------------------------
+    "spikeinterface",
+    "probeinterface",
+
+    # -- scientific stack ----------------------------------------------------
+    "numpy",
+    "pandas",
+    "scipy",
+
+    # -- misc ----------------------------------------------------------------
+    "pydantic",
+    "python-dateutil",
+    "pytz",
+]
+dev = [
+    "pytest",
+    "bnd[processing]",
+]
+
+[project.scripts]
+bnd = "bnd.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/BeNeuroLab/bnd"
+Repository = "https://github.com/BeNeuroLab/bnd"
+
+[tool.hatch.build.targets.wheel]
+packages = ["bnd"]

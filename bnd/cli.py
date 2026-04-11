@@ -8,7 +8,6 @@ from typing_extensions import Annotated
 from rich import print
 
 from .config import (
-    _check_is_git_track,
     _check_root,
     _check_session_directory,
     _get_env_path,
@@ -311,8 +310,6 @@ def init():
 
     else:
         print("\nConfig file doesn't exist. Let's create one.")
-        repo_path = _get_package_path()
-        _check_is_git_track(repo_path)
 
         local_path = Path(
             typer.prompt("Enter the absolute path to the root of the local data storage")
@@ -325,7 +322,6 @@ def init():
         _check_root(remote_path)
 
         with open(env_path, "w") as f:
-            f.write(f"REPO_PATH = {repo_path}\n")
             f.write(f"LOCAL_PATH = {local_path}\n")
             f.write(f"REMOTE_PATH = {remote_path}\n")
 

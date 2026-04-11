@@ -14,12 +14,32 @@ def _get_package_path() -> Path:
     return Path(__file__).absolute().parent.parent
 
 
+def _get_config_dir() -> Path:
+    """
+    Returns the path to the bnd configuration directory (~/.bnd/).
+    Creates it if it doesn't exist.
+    """
+    config_dir = Path.home() / ".bnd"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    return config_dir
+
+
 def _get_env_path() -> Path:
     """
     Returns the path to the .env file containing the configuration settings.
+    Checks ~/.bnd/.env first, falls back to legacy location (next to package) for migration.
     """
-    package_path = _get_package_path()
-    return package_path / ".env"
+    new_path = _get_config_dir() / ".env"
+    if new_path.exists():
+        return new_path
+
+    # Legacy: config stored next to the package source (editable / conda installs)
+    legacy_path = _get_package_path() / ".env"
+    if legacy_path.exists():
+        return legacy_path
+
+    # Default to the new location for fresh installs
+    return new_path
 
 
 def _check_session_directory(session_path):
@@ -48,7 +68,6 @@ class Config:
     def __init__(self, env_path=_get_env_path()):
         self.REMOTE_PATH = None
         self.LOCAL_PATH = None
-        self.REPO_PATH = None
         # Load the actual environment PATHs
         self.load_env(env_path)
         self.datetime_pattern = "%Y_%m_%d_%H_%M"

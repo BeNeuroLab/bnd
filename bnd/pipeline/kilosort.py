@@ -1,16 +1,187 @@
 import os
+import json
+import shutil
+import subprocess
+import tempfile
+import textwrap
 from configparser import ConfigParser
 from pathlib import Path
-
-import torch
-from kilosort import run_kilosort
-from kilosort.utils import PROBE_DIR, download_probes
 
 from ..logger import set_logging
 from ..config import Config, _load_config
 from ..config import find_file
 
 logger = set_logging(__name__)
+
+
+_KILOSORT_RUNNER_CODE = textwrap.dedent(
+    """
+    import json
+    import sys
+    from pathlib import Path
+
+    params_path = Path(sys.argv[1])
+    params = json.loads(params_path.read_text())
+
+    from kilosort import run_kilosort
+    from kilosort.utils import PROBE_DIR, download_probes
+
+    probe_name = params["probe_name"]
+
+    if not PROBE_DIR.exists():
+        download_probes()
+
+    if not any(PROBE_DIR.glob(probe_name)):
+        download_probes()
+
+    run_kilosort(
+        settings=params["settings"],
+        probe_name=probe_name,
+        data_dir=params["data_dir"],
+        results_dir=params["results_dir"],
+        save_preprocessed_copy=params.get("save_preprocessed_copy", False),
+    )
+"""
+).strip()
+
+
+def _get_kilosort_env_name() -> str:
+    return (
+        os.environ.get("BND_KILOSORT_ENV")
+        or os.environ.get("KILOSORT_CONDA_ENV")
+        or "kilosort"
+    )
+
+
+def _find_conda_runner() -> str:
+    conda_exe = os.environ.get("CONDA_EXE")
+    if conda_exe and Path(conda_exe).exists():
+        return conda_exe
+
+    for candidate in ("conda", "mamba", "micromamba"):
+        resolved = shutil.which(candidate)
+        if resolved:
+            return resolved
+
+    raise FileNotFoundError(
+        "Could not find a conda runner executable (tried CONDA_EXE, conda, mamba, micromamba)."
+    )
+
+
+def _run_in_conda_env(
+    env_name: str, args: list[str], *, capture_output: bool = False
+) -> subprocess.CompletedProcess:
+    runner = _find_conda_runner()
+    cmd = [runner, "run", "-n", env_name, *args]
+
+    # Workaround for WSL/DrvFs temp-file oddities (e.g., ftruncate -> ENOENT) when
+    # TEMP/TMP point to `/mnt/c/...`. Force a sane temp dir for subprocesses.
+    env = os.environ.copy()
+    if Path("/tmp").exists():
+        env["TMPDIR"] = "/tmp"
+        env["TEMP"] = "/tmp"
+        env["TMP"] = "/tmp"
+    try:
+        return subprocess.run(
+            cmd,
+            check=True,
+            capture_output=capture_output,
+            text=capture_output,
+            env=env,
+        )
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(
+            f"Command failed in conda env '{env_name}': {cmd} (exit code {e.returncode})."
+        ) from e
+
+
+def _check_kilosort_cuda(env_name: str) -> tuple[bool, str | None]:
+    code = textwrap.dedent(
+        """
+        import torch
+
+        if torch.cuda.is_available():
+            print("CUDA_AVAILABLE")
+            print(torch.cuda.get_device_name(0))
+        else:
+            print("CUDA_NOT_AVAILABLE")
+        """
+    ).strip()
+
+    script_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
+            f.write(code)
+            script_path = Path(f.name)
+
+        proc = _run_in_conda_env(
+            env_name, ["python", str(script_path)], capture_output=True
+        )
+    except Exception:
+        logger.debug("Could not check CUDA in env '%s'", env_name, exc_info=True)
+        return False, None
+    finally:
+        if script_path:
+            try:
+                script_path.unlink(missing_ok=True)
+            except Exception:
+                pass
+
+    lines = [line.strip() for line in (proc.stdout or "").splitlines() if line.strip()]
+    if not lines:
+        return False, None
+
+    if lines[0] == "CUDA_AVAILABLE":
+        return True, lines[1] if len(lines) > 1 else None
+
+    return False, None
+
+
+def _run_kilosort_in_env(
+    *,
+    env_name: str,
+    settings: dict,
+    probe_name: str,
+    data_dir: Path,
+    results_dir: Path,
+) -> None:
+    payload = dict(
+        settings=settings,
+        probe_name=probe_name,
+        data_dir=str(data_dir),
+        results_dir=str(results_dir),
+        save_preprocessed_copy=False,
+    )
+
+    tmp_path: Path | None = None
+    runner_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as tmp:
+            json.dump(payload, tmp)
+            tmp_path = Path(tmp.name)
+
+        with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as runner:
+            runner.write(_KILOSORT_RUNNER_CODE)
+            runner_path = Path(runner.name)
+
+        _run_in_conda_env(
+            env_name, ["python", str(runner_path), str(tmp_path)]
+        )
+
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed to run Kilosort in the separate conda env '{env_name}'. "
+            "Make sure it exists and has the `kilosort` package installed. "
+            "You can override the env name via BND_KILOSORT_ENV."
+        ) from e
+
+    finally:
+        for p in (tmp_path, runner_path):
+            if p:
+                try:
+                    p.unlink(missing_ok=True)
+                except Exception:
+                    pass
 
 
 def read_metadata(filepath: Path) -> dict:
@@ -120,27 +291,19 @@ def run_kilosort_on_stream(
     )
     ksort_output_path.mkdir(parents=True, exist_ok=True)
 
-    if not PROBE_DIR.exists():
-        logger.info("Probe directory not found, downloading probes")
-        download_probes()
-
-    if any(PROBE_DIR.glob(f"{probe_name}")):
-        # Sometimes the gateway can throw an error so just double check.
-        download_probes()
-
     # Check if the metadata file is complete
     # when SpikeGLX crashes, metadata misses some values.
     _fix_session_ap_metadata(meta_file_path)
     # Find out which probe type we have
     probe_name = _read_probe_type(meta_file_path)
 
-    _ = run_kilosort(
+    env_name = _get_kilosort_env_name()
+    _run_kilosort_in_env(
+        env_name=env_name,
         settings=sorter_params,
         probe_name=probe_name,
         data_dir=probe_folder_path,
         results_dir=ksort_output_path,
-        save_preprocessed_copy=False,
-        verbose_console=False,
     )
     return
 
@@ -210,11 +373,17 @@ def run_kilosort_on_session(session_path: Path) -> None:
 
     else:
         ephys_recording_folders = config.get_subdirectories_from_pattern(session_path, "*_g?")
-        # Check kilosort is installed in environment
-        if torch.cuda.is_available():
-            logger.info(f"CUDA is available. GPU device: {torch.cuda.get_device_name(0)}")
+        env_name = _get_kilosort_env_name()
+        cuda_available, device_name = _check_kilosort_cuda(env_name)
+        if cuda_available:
+            if device_name:
+                logger.info(f"CUDA is available in '{env_name}'. GPU device: {device_name}")
+            else:
+                logger.info(f"CUDA is available in '{env_name}'.")
         else:
-            logger.warning("CUDA is not available. GPU computations will not be enabled.")
+            logger.warning(
+                f"CUDA is not available in '{env_name}'. GPU computations will not be enabled."
+            )
             if len(ephys_recording_folders) > 1:
                 raise ValueError(
                     "It seems you are trying to run kilosort without GPU. Look at the README on instrucstions of how to do this. "
